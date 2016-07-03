@@ -4,8 +4,11 @@ import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.Color
 import java.awt.Component
 import java.awt.Font
+import java.awt.Toolkit
 import javax.swing.*
+import javax.swing.plaf.ColorUIResource
 import javax.swing.plaf.metal.MetalTabbedPaneUI
+import javax.swing.plaf.synth.SynthScrollBarUI
 
 private val BACKGROUND = Color(39, 40, 34)
 private val BACKGROUND_SUBTLE_HIGHLIGHT = Color(49, 50, 44)
@@ -13,22 +16,21 @@ private val BACKGROUND_DARKER = Color(23, 24, 20)
 private val BACKGROUND_LIGHTER = Color(109, 109, 109)
 
 private fun makeTextPanel(font: Font) : Component {
-    val editor = JEditorPane()
     val textArea = RSyntaxTextArea(20, 60)
-    textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA)
-    textArea.setCodeFoldingEnabled(true)
+    textArea.syntaxEditingStyle = SyntaxConstants.SYNTAX_STYLE_JAVA
+    textArea.isCodeFoldingEnabled = true
     textArea.font = font
     textArea.background = BACKGROUND
     textArea.foreground = Color.WHITE
     textArea.currentLineHighlightColor = BACKGROUND_SUBTLE_HIGHLIGHT
     val sp = RTextScrollPane(textArea)
+    sp.viewportBorder = BorderFactory.createEmptyBorder()
+    sp.verticalScrollBar.ui = object : SynthScrollBarUI() {
+        override fun configureScrollBarColors() {
+            super.configureScrollBarColors()
+        }
+    }
     return sp
-
-
-    //editor.font = font
-    //editor.background = BACKGROUND
-    //editor.foreground = Color.WHITE
-    //return editor
 }
 
 internal class NoInsetTabbedPaneUI : MetalTabbedPaneUI() {
@@ -69,13 +71,30 @@ private fun addTab(tabbedPane: MyTabbledPane, title: String, font: Font) {
     tabbedPane.setBackgroundAt(tabbedPane.tabCount - 1, BACKGROUND_DARKER)
 }
 
+val APP_TITLE = "Kanvas"
+
 private fun createAndShowGUI() {
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+
+    val xToolkit = Toolkit.getDefaultToolkit()
+    val awtAppClassNameField = xToolkit.javaClass.getDeclaredField("awtAppClassName")
+    awtAppClassNameField.isAccessible = true
+    awtAppClassNameField.set(xToolkit, APP_TITLE)
+
+    /*UIManager.put("ScrollBar.thumb", ColorUIResource(Color.RED))
+    UIManager.put("ScrollBar.thumbHighlight", ColorUIResource(Color.RED))
+    UIManager.put("ScrollBar.thumbShadow", ColorUIResource(Color.RED))
+    UIManager.put("ScrollBar.background", ColorUIResource(Color.RED))
+    UIManager.put("ScrollBar.foreground", ColorUIResource(Color.RED))
+    UIManager.put("Button.foreground", ColorUIResource(Color.RED))
+
+    val defaults = UIManager.getLookAndFeelDefaults().entries
+    defaults.forEach { e -> if (e.key.toString().contains("Scroll")) println(e.key) }*/
 
     val font = Font.createFont(Font.TRUETYPE_FONT, Object().javaClass.getResourceAsStream("/CutiveMono-Regular.ttf"))
             .deriveFont(24.0f)
 
-    val frame = JFrame("Kanvas")
+    val frame = JFrame(APP_TITLE)
     frame.background = BACKGROUND_DARKER
     frame.contentPane.background = BACKGROUND_DARKER
     frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
