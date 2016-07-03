@@ -1,3 +1,6 @@
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants
+import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.Color
 import java.awt.Component
 import java.awt.Font
@@ -5,15 +8,27 @@ import javax.swing.*
 import javax.swing.plaf.metal.MetalTabbedPaneUI
 
 private val BACKGROUND = Color(39, 40, 34)
+private val BACKGROUND_SUBTLE_HIGHLIGHT = Color(49, 50, 44)
 private val BACKGROUND_DARKER = Color(23, 24, 20)
 private val BACKGROUND_LIGHTER = Color(109, 109, 109)
 
 private fun makeTextPanel(font: Font) : Component {
     val editor = JEditorPane()
-    editor.font = font
-    editor.background = BACKGROUND
-    editor.foreground = Color.WHITE
-    return editor
+    val textArea = RSyntaxTextArea(20, 60)
+    textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA)
+    textArea.setCodeFoldingEnabled(true)
+    textArea.font = font
+    textArea.background = BACKGROUND
+    textArea.foreground = Color.WHITE
+    textArea.currentLineHighlightColor = BACKGROUND_SUBTLE_HIGHLIGHT
+    val sp = RTextScrollPane(textArea)
+    return sp
+
+
+    //editor.font = font
+    //editor.background = BACKGROUND
+    //editor.foreground = Color.WHITE
+    //return editor
 }
 
 internal class NoInsetTabbedPaneUI : MetalTabbedPaneUI() {
