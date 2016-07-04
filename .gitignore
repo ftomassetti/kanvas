@@ -2,3 +2,7 @@
 build
 .idea
 *.iml
+generated-src
+out
+*.ipr
+*.iws

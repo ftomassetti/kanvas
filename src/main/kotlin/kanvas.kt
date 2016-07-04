@@ -1,23 +1,66 @@
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants
+import me.tomassetti.python.Python3Lexer
+import org.fife.ui.rsyntaxtextarea.*
 import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.Color
 import java.awt.Component
 import java.awt.Font
 import java.awt.Toolkit
 import javax.swing.*
-import javax.swing.plaf.ColorUIResource
 import javax.swing.plaf.metal.MetalTabbedPaneUI
 import javax.swing.plaf.synth.SynthScrollBarUI
+import javax.swing.text.Segment
 
 private val BACKGROUND = Color(39, 40, 34)
 private val BACKGROUND_SUBTLE_HIGHLIGHT = Color(49, 50, 44)
 private val BACKGROUND_DARKER = Color(23, 24, 20)
 private val BACKGROUND_LIGHTER = Color(109, 109, 109)
 
+class TurinSyntaxScheme(useDefaults: Boolean) : SyntaxScheme(useDefaults) {
+    override fun getStyle(index: Int): Style {
+        val style = Style()
+        if (Python3Lexer.DEF == index) {
+            style.foreground = Color.GREEN
+        }
+        if (Python3Lexer.NAME == index) {
+            style.foreground = Color.BLUE
+        }
+        if (Python3Lexer.COLON == index) {
+            style.foreground = Color.DARK_GRAY
+        }
+        return style
+    }
+}
+
 private fun makeTextPanel(font: Font) : Component {
     val textArea = RSyntaxTextArea(20, 60)
-    textArea.syntaxEditingStyle = SyntaxConstants.SYNTAX_STYLE_JAVA
+    //textArea.syntaxEditingStyle = SyntaxConstants.SYNTAX_STYLE_JAVA
+
+    /*(textArea.document as RSyntaxDocument).setTokenMakerFactory(object : TokenMakerFactory() {
+        override fun getTokenMakerImpl(key: String?): TokenMaker {
+            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun keySet(): MutableSet<String>? {
+            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+    })*/
+    (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker())
+    /*(textArea.document as RSyntaxDocument).setSyntaxStyle(object : AbstractTokenMaker() {
+        override fun getWordsToHighlight(): TokenMap {
+            val tm = TokenMap()
+            tm.put("class", TokenTypes.RESERVED_WORD)
+            return tm
+            //throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun getTokenList(text: Segment?, initialTokenType: Int, startOffset: Int): Token {
+            val t = TokenImpl()
+            t.text = CharArray(69)
+            return t
+        }
+
+    })*/
+    textArea.syntaxScheme = TurinSyntaxScheme(true)
     textArea.isCodeFoldingEnabled = true
     textArea.font = font
     textArea.background = BACKGROUND
