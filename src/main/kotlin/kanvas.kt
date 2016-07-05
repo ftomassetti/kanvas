@@ -1,4 +1,4 @@
-import me.tomassetti.python.Python3Lexer
+import me.tomassetti.python.Python3
 import org.fife.ui.rsyntaxtextarea.*
 import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.Color
@@ -8,7 +8,6 @@ import java.awt.Toolkit
 import javax.swing.*
 import javax.swing.plaf.metal.MetalTabbedPaneUI
 import javax.swing.plaf.synth.SynthScrollBarUI
-import javax.swing.text.Segment
 
 private val BACKGROUND = Color(39, 40, 34)
 private val BACKGROUND_SUBTLE_HIGHLIGHT = Color(49, 50, 44)
@@ -18,14 +17,23 @@ private val BACKGROUND_LIGHTER = Color(109, 109, 109)
 class TurinSyntaxScheme(useDefaults: Boolean) : SyntaxScheme(useDefaults) {
     override fun getStyle(index: Int): Style {
         val style = Style()
-        if (Python3Lexer.DEF == index) {
+        if (Python3.DEF == index) {
             style.foreground = Color.GREEN
         }
-        if (Python3Lexer.NAME == index) {
+        if (Python3.NAME == index) {
             style.foreground = Color.BLUE
         }
-        if (Python3Lexer.COLON == index) {
+        if (Python3.COLON == index) {
             style.foreground = Color.DARK_GRAY
+        }
+        if (Python3.STRING_LITERAL == index) {
+            style.foreground = Color.GREEN
+        }
+        if (Python3.LONG_STRING_LITERAL_START == index) {
+            style.foreground = Color.GREEN
+        }
+        if (Python3.IN_LONG_STRING == index) {
+            style.foreground = Color(200, 100, 100)
         }
         return style
     }

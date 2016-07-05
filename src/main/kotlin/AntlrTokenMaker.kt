@@ -1,7 +1,7 @@
-import me.tomassetti.python.Python3Lexer
-import org.antlr.runtime.CommonToken
-import org.antlr.v4.runtime.CommonTokenStream
-import org.fife.ui.rsyntaxtextarea.*
+import me.tomassetti.python.Python3
+import org.fife.ui.rsyntaxtextarea.Token
+import org.fife.ui.rsyntaxtextarea.TokenImpl
+import org.fife.ui.rsyntaxtextarea.TokenMakerBase
 import java.util.*
 import javax.swing.text.Segment
 
@@ -24,12 +24,13 @@ class AntlrTokenMaker() : TokenMakerBase() {
             throw IllegalArgumentException()
         }
         println("TEXT IS '${text.toString()}' startOffset $startOffset initialTokenType $initialTokenType TEXT OFFSET ${text.offset}")
-        val lexer = Python3Lexer(org.antlr.v4.runtime.ANTLRInputStream(text.toString()))
+        val lexer = Python3(org.antlr.v4.runtime.ANTLRInputStream(text.toString()))
         val tokens = LinkedList<org.antlr.v4.runtime.Token>()
         while (!lexer._hitEOF) {
             tokens.add(lexer.nextToken())
         }
         println("TOKENS "+tokens)
+        println("STATE " + lexer.state)
         return toList(text, startOffset, tokens) as Token
     }
 

@@ -1,4 +1,5 @@
-import me.tomassetti.python.Python3Lexer
+import me.tomassetti.python.Python3
+
 import org.antlr.v4.runtime.Token
 import java.util.*
 import javax.swing.SwingUtilities
@@ -8,7 +9,7 @@ import javax.swing.SwingUtilities
  */
 
 fun main(args: Array<String>) {
-    val l = Python3Lexer(org.antlr.v4.runtime.ANTLRInputStream("def foo():"))
+    val l = Python3(org.antlr.v4.runtime.ANTLRInputStream("def foo():"))
     val tokens = LinkedList<Token>()
     while (!l._hitEOF) {
         tokens.add(l.nextToken())
