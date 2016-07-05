@@ -7,25 +7,23 @@ import javax.swing.text.Segment
 
 class AntlrTokenMaker() : TokenMakerBase() {
 
-    fun toList(text: Segment?, startOffset: Int, antlrTokens:List<org.antlr.v4.runtime.Token>) : Token?{
+    fun toList(text: Segment, startOffset: Int, antlrTokens:List<org.antlr.v4.runtime.Token>) : Token?{
         if (antlrTokens.isEmpty()) {
             return null
         } else {
             val at = antlrTokens[0]
-            val t = TokenImpl(text, at.startIndex, at.startIndex + at.text.length - 1, startOffset + at.startIndex, at.type, 0)
+            val t = TokenImpl(text, text.offset + at.startIndex, text.offset + at.startIndex + at.text.length - 1, startOffset + at.startIndex, at.type, 0)
             t.nextToken = toList(text, startOffset, antlrTokens.subList(1, antlrTokens.size))
             return t
         }
     }
 
     override fun getTokenList(text: Segment?, initialTokenType: Int, startOffset: Int): Token {
-        resetTokenList()
-
+        //resetTokenList()
         if (text == null) {
             throw IllegalArgumentException()
         }
-        //AntlrTokenR
-        println("TEXT IS '${text.toString()}' startOffset $startOffset initialTokenType $initialTokenType")
+        println("TEXT IS '${text.toString()}' startOffset $startOffset initialTokenType $initialTokenType TEXT OFFSET ${text.offset}")
         val lexer = Python3Lexer(org.antlr.v4.runtime.ANTLRInputStream(text.toString()))
         val tokens = LinkedList<org.antlr.v4.runtime.Token>()
         while (!lexer._hitEOF) {
