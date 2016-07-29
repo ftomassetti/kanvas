@@ -46,33 +46,8 @@ class TurinSyntaxScheme(useDefaults: Boolean) : SyntaxScheme(useDefaults) {
 
 private fun makeTextPanel(font: Font) : Component {
     val textArea = RSyntaxTextArea(20, 60)
-    //textArea.syntaxEditingStyle = SyntaxConstants.SYNTAX_STYLE_JAVA
-
-    /*(textArea.document as RSyntaxDocument).setTokenMakerFactory(object : TokenMakerFactory() {
-        override fun getTokenMakerImpl(key: String?): TokenMaker {
-            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun keySet(): MutableSet<String>? {
-            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-    })*/
     (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker())
-    /*(textArea.document as RSyntaxDocument).setSyntaxStyle(object : AbstractTokenMaker() {
-        override fun getWordsToHighlight(): TokenMap {
-            val tm = TokenMap()
-            tm.put("class", TokenTypes.RESERVED_WORD)
-            return tm
-            //throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
 
-        override fun getTokenList(text: Segment?, initialTokenType: Int, startOffset: Int): Token {
-            val t = TokenImpl()
-            t.text = CharArray(69)
-            return t
-        }
-
-    })*/
     textArea.syntaxScheme = TurinSyntaxScheme(true)
     textArea.isCodeFoldingEnabled = true
     textArea.font = font
@@ -136,16 +111,6 @@ private fun createAndShowGUI() {
     val awtAppClassNameField = xToolkit.javaClass.getDeclaredField("awtAppClassName")
     awtAppClassNameField.isAccessible = true
     awtAppClassNameField.set(xToolkit, APP_TITLE)
-
-    /*UIManager.put("ScrollBar.thumb", ColorUIResource(Color.RED))
-    UIManager.put("ScrollBar.thumbHighlight", ColorUIResource(Color.RED))
-    UIManager.put("ScrollBar.thumbShadow", ColorUIResource(Color.RED))
-    UIManager.put("ScrollBar.background", ColorUIResource(Color.RED))
-    UIManager.put("ScrollBar.foreground", ColorUIResource(Color.RED))
-    UIManager.put("Button.foreground", ColorUIResource(Color.RED))
-
-    val defaults = UIManager.getLookAndFeelDefaults().entries
-    defaults.forEach { e -> if (e.key.toString().contains("Scroll")) println(e.key) }*/
 
     val font = Font.createFont(Font.TRUETYPE_FONT, Object().javaClass.getResourceAsStream("/CutiveMono-Regular.ttf"))
             .deriveFont(24.0f)
