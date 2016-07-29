@@ -209,10 +209,10 @@ fragment SHORT_STRING
 
 
 /// longstring      ::=  "'''" longstringitem* "'''" | '"""' longstringitem* '"""'
-fragment LONG_STRING
+/*fragment LONG_STRING
  : '\'\'\'' LONG_STRING_ITEM*? '\'\'\''
  | '"""' LONG_STRING_ITEM*? '"""'
- ;
+ ;*/
 
 /// longstringitem  ::=  longstringchar | stringescapeseq
 fragment LONG_STRING_ITEM

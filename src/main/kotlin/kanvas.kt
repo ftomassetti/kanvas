@@ -1,5 +1,9 @@
+
 import me.tomassetti.python.Python3
-import org.fife.ui.rsyntaxtextarea.*
+import org.fife.ui.rsyntaxtextarea.RSyntaxDocument
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+import org.fife.ui.rsyntaxtextarea.Style
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme
 import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.Color
 import java.awt.Component
@@ -17,23 +21,24 @@ private val BACKGROUND_LIGHTER = Color(109, 109, 109)
 class TurinSyntaxScheme(useDefaults: Boolean) : SyntaxScheme(useDefaults) {
     override fun getStyle(index: Int): Style {
         val style = Style()
-        if (Python3.DEF == index) {
-            style.foreground = Color.GREEN
+        val color = when (index) {
+            Python3.DEF -> Color.GREEN
+            Python3.IMPORT -> Color.GREEN
+            Python3.PASS -> Color.GREEN
+            Python3.NAME -> Color.WHITE
+            Python3.COLON -> Color.LIGHT_GRAY
+            Python3.DOT -> Color.LIGHT_GRAY
+            Python3.OPEN_BRACE -> Color.LIGHT_GRAY
+            Python3.CLOSE_BRACE -> Color.LIGHT_GRAY
+            Python3.OPEN_PAREN -> Color.LIGHT_GRAY
+            Python3.CLOSE_PAREN -> Color.LIGHT_GRAY
+            Python3.STRING_LITERAL -> Color.YELLOW
+            Python3.LONG_STRING_LITERAL_START -> Color.YELLOW
+            Python3.IN_LONG_STRING -> Color.YELLOW
+            else -> null
         }
-        if (Python3.NAME == index) {
-            style.foreground = Color.BLUE
-        }
-        if (Python3.COLON == index) {
-            style.foreground = Color.DARK_GRAY
-        }
-        if (Python3.STRING_LITERAL == index) {
-            style.foreground = Color.GREEN
-        }
-        if (Python3.LONG_STRING_LITERAL_START == index) {
-            style.foreground = Color.GREEN
-        }
-        if (Python3.IN_LONG_STRING == index) {
-            style.foreground = Color(200, 100, 100)
+        if (color != null) {
+            style.foreground = color
         }
         return style
     }
