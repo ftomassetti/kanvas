@@ -57,11 +57,15 @@ class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(t
     val text : String
         get() = textArea.text
     var title : String
-        get() = tabbedPane().getTitleAt(tabbedPane().indexOfComponent(this))
+        get() = tabbedPane().getTitleAt(index())
         set(value) {
-            tabbedPane().setTitleAt(tabbedPane().indexOfComponent(this), value)
+            tabbedPane().setTitleAt(index(), value)
         }
-    private fun tabbedPane() = this.parent as MyTabbledPane
+    private fun tabbedPane() = this.parent as MyTabbedPane
+    private fun index() = tabbedPane().indexOfComponent(this)
+    fun close() {
+        tabbedPane().removeTabAt(index())
+    }
 }
 
 private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialContenxt: String = "", file: File? = null) : TextPanel {
@@ -106,7 +110,7 @@ internal class NoInsetTabbedPaneUI : MetalTabbedPaneUI() {
     }
 }
 
-class MyTabbledPane : JTabbedPane() {
+class MyTabbedPane : JTabbedPane() {
 
     init {
         this.tabPlacement = SwingConstants.TOP
@@ -117,7 +121,7 @@ class MyTabbledPane : JTabbedPane() {
 
 }
 
-private fun addTab(tabbedPane: MyTabbledPane, title: String, font: Font, initialContenxt: String = "",
+private fun addTab(tabbedPane: MyTabbedPane, title: String, font: Font, initialContenxt: String = "",
                    languageSupport: LanguageSupport = noneLanguageSupport,
                    file: File? = null) {
     val panel = makeTextPanel(font, languageSupport, initialContenxt, file)
@@ -128,7 +132,7 @@ private fun addTab(tabbedPane: MyTabbledPane, title: String, font: Font, initial
 
 val APP_TITLE = "Kanvas"
 
-private fun saveAsCommand(tabbedPane : MyTabbledPane) {
+private fun saveAsCommand(tabbedPane : MyTabbedPane) {
     if (tabbedPane.selectedComponent == null) {
         return
     }
@@ -141,7 +145,7 @@ private fun saveAsCommand(tabbedPane : MyTabbledPane) {
     }
 }
 
-private fun saveCommand(tabbedPane : MyTabbledPane) {
+private fun saveCommand(tabbedPane : MyTabbedPane) {
     if (tabbedPane.selectedComponent == null) {
         return
     }
@@ -151,6 +155,13 @@ private fun saveCommand(tabbedPane : MyTabbledPane) {
     } else {
         file.writeText((tabbedPane.selectedComponent as TextPanel).text)
     }
+}
+
+private fun closeCommand(tabbedPane : MyTabbedPane) {
+    if (tabbedPane.selectedComponent == null) {
+        return
+    }
+    (tabbedPane.selectedComponent as TextPanel).close()
 }
 
 private fun createAndShowGUI() {
@@ -169,7 +180,7 @@ private fun createAndShowGUI() {
     frame.contentPane.background = BACKGROUND_DARKER
     frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
-    val tabbedPane = MyTabbledPane()
+    val tabbedPane = MyTabbedPane()
     frame.contentPane.add(tabbedPane)
 
     val menuBar = JMenuBar()
@@ -196,6 +207,7 @@ private fun createAndShowGUI() {
     saveAs.addActionListener { saveAsCommand(tabbedPane) }
     fileMenu.add(saveAs)
     val close = JMenuItem("Close")
+    close.addActionListener { closeCommand(tabbedPane) }
     fileMenu.add(close)
     frame.jMenuBar = menuBar
 
