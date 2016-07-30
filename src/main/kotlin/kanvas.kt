@@ -56,6 +56,12 @@ object languageSupportRegistry {
 class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(textArea) {
     val text : String
         get() = textArea.text
+    var title : String
+        get() = tabbedPane().getTitleAt(tabbedPane().indexOfComponent(this))
+        set(value) {
+            tabbedPane().setTitleAt(tabbedPane().indexOfComponent(this), value)
+        }
+    private fun tabbedPane() = this.parent as MyTabbledPane
 }
 
 private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialContenxt: String = "", file: File? = null) : TextPanel {
@@ -131,6 +137,7 @@ private fun saveAsCommand(tabbedPane : MyTabbledPane) {
     if (res == JFileChooser.APPROVE_OPTION) {
         (tabbedPane.selectedComponent as TextPanel).file = fc.selectedFile
         fc.selectedFile.writeText((tabbedPane.selectedComponent as TextPanel).text)
+        (tabbedPane.selectedComponent as TextPanel).title = fc.selectedFile.name
     }
 }
 
