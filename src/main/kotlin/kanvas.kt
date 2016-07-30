@@ -31,6 +31,11 @@ class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(t
     fun close() {
         tabbedPane().removeTabAt(index())
     }
+
+    fun  changeLanguageSupport(languageSupport: LanguageSupport) {
+        (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker(languageSupport.antlrLexerFactory))
+        (textArea as RSyntaxTextArea).syntaxScheme = languageSupport.syntaxScheme
+    }
 }
 
 private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialContenxt: String = "", file: File? = null) : TextPanel {
@@ -112,8 +117,10 @@ private fun saveAsCommand(tabbedPane : MyTabbedPane) {
     val res = fc.showOpenDialog(tabbedPane)
     if (res == JFileChooser.APPROVE_OPTION) {
         (tabbedPane.selectedComponent as TextPanel).file = fc.selectedFile
+        val languageSupport = languageSupportRegistry.languageSupportForFile(fc.selectedFile)
         fc.selectedFile.writeText((tabbedPane.selectedComponent as TextPanel).text)
         (tabbedPane.selectedComponent as TextPanel).title = fc.selectedFile.name
+        (tabbedPane.selectedComponent as TextPanel).changeLanguageSupport(languageSupport)
     }
 }
 
