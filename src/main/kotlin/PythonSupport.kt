@@ -1,4 +1,6 @@
-import me.tomassetti.python.Python3
+package me.tomassetti.kanvas
+
+import me.tomassetti.lexers.Python3
 import org.antlr.v4.runtime.Lexer
 import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme

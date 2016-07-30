@@ -1,3 +1,4 @@
+package me.tomassetti.kanvas
 
 import org.antlr.v4.runtime.Lexer
 import org.fife.ui.rsyntaxtextarea.Token
