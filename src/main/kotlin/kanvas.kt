@@ -6,7 +6,12 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme
 import org.fife.ui.rtextarea.RTextScrollPane
-import java.awt.*
+import java.awt.Color
+import java.awt.Dimension
+import java.awt.Font
+import java.awt.Toolkit
+import java.io.File
+import java.nio.charset.Charset
 import java.util.*
 import javax.swing.*
 import javax.swing.plaf.metal.MetalTabbedPaneUI
@@ -38,34 +43,41 @@ object noneLanguageSupport : LanguageSupport {
 
 }
 
-object LanguageSupportRegistry {
+object languageSupportRegistry {
     private val extensionsMap = HashMap<String, LanguageSupport>()
 
     fun register(extension : String, languageSupport: LanguageSupport) {
         extensionsMap[extension] = languageSupport
     }
     fun languageSupportForExtension(extension : String) : LanguageSupport = extensionsMap.getOrDefault(extension, noneLanguageSupport)
+    fun languageSupportForFile(file : File) : LanguageSupport = languageSupportForExtension(file.extension)
 }
 
-private fun makeTextPanel(font: Font, languageSupport: LanguageSupport) : Component {
+class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(textArea) {
+    val text : String
+        get() = textArea.text
+}
+
+private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialContenxt: String = "", file: File? = null) : TextPanel {
     val textArea = RSyntaxTextArea(20, 60)
 
     (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker(languageSupport.antlrLexerFactory))
 
     textArea.syntaxScheme = languageSupport.syntaxScheme
+    textArea.text = initialContenxt
     textArea.isCodeFoldingEnabled = true
     textArea.font = font
     textArea.background = BACKGROUND
     textArea.foreground = Color.WHITE
     textArea.currentLineHighlightColor = BACKGROUND_SUBTLE_HIGHLIGHT
-    val sp = RTextScrollPane(textArea)
-    sp.viewportBorder = BorderFactory.createEmptyBorder()
-    sp.verticalScrollBar.ui = object : SynthScrollBarUI() {
+    val textPanel = TextPanel(textArea, file)
+    textPanel.viewportBorder = BorderFactory.createEmptyBorder()
+    textPanel.verticalScrollBar.ui = object : SynthScrollBarUI() {
         override fun configureScrollBarColors() {
             super.configureScrollBarColors()
         }
     }
-    return sp
+    return textPanel
 }
 
 internal class NoInsetTabbedPaneUI : MetalTabbedPaneUI() {
@@ -99,14 +111,40 @@ class MyTabbledPane : JTabbedPane() {
 
 }
 
-private fun addTab(tabbedPane: MyTabbledPane, title: String, font: Font, languageSupport: LanguageSupport) {
-    val panel1 = makeTextPanel(font, languageSupport)
-    tabbedPane.addTab(title, null, panel1, "Go to $title")
+private fun addTab(tabbedPane: MyTabbledPane, title: String, font: Font, initialContenxt: String = "",
+                   languageSupport: LanguageSupport = noneLanguageSupport,
+                   file: File? = null) {
+    val panel = makeTextPanel(font, languageSupport, initialContenxt, file)
+    tabbedPane.addTab(title, null, panel, "Go to $title")
     tabbedPane.setForegroundAt(tabbedPane.tabCount - 1, Color.white)
     tabbedPane.setBackgroundAt(tabbedPane.tabCount - 1, BACKGROUND_DARKER)
 }
 
 val APP_TITLE = "Kanvas"
+
+private fun saveAsCommand(tabbedPane : MyTabbledPane) {
+    if (tabbedPane.selectedComponent == null) {
+        return
+    }
+    val fc = JFileChooser()
+    val res = fc.showOpenDialog(tabbedPane)
+    if (res == JFileChooser.APPROVE_OPTION) {
+        (tabbedPane.selectedComponent as TextPanel).file = fc.selectedFile
+        fc.selectedFile.writeText((tabbedPane.selectedComponent as TextPanel).text)
+    }
+}
+
+private fun saveCommand(tabbedPane : MyTabbledPane) {
+    if (tabbedPane.selectedComponent == null) {
+        return
+    }
+    val file = (tabbedPane.selectedComponent as TextPanel).file
+    if (file == null) {
+        saveAsCommand(tabbedPane)
+    } else {
+        file.writeText((tabbedPane.selectedComponent as TextPanel).text)
+    }
+}
 
 private fun createAndShowGUI() {
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
@@ -125,28 +163,34 @@ private fun createAndShowGUI() {
     frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
     val tabbedPane = MyTabbledPane()
+    frame.contentPane.add(tabbedPane)
 
     val menuBar = JMenuBar()
     val fileMenu = JMenu("File")
     menuBar.add(fileMenu)
     val open = JMenuItem("Open")
+    open.addActionListener {
+        val fc = JFileChooser()
+        val res = fc.showOpenDialog(frame)
+        if (res == JFileChooser.APPROVE_OPTION) {
+            addTab(tabbedPane, fc.selectedFile.name, font, fc.selectedFile.readText(Charset.defaultCharset()),
+                    languageSupportRegistry.languageSupportForFile(fc.selectedFile),
+                    fc.selectedFile)
+        }
+    }
     fileMenu.add(open)
     val new = JMenuItem("New")
-    new.addActionListener { addTab(tabbedPane, "<UNNAMED>", font, noneLanguageSupport) }
+    new.addActionListener { addTab(tabbedPane, "<UNNAMED>", font) }
     fileMenu.add(new)
     val save = JMenuItem("Save")
+    save.addActionListener { saveCommand(tabbedPane) }
     fileMenu.add(save)
     val saveAs = JMenuItem("Save as")
+    saveAs.addActionListener { saveAsCommand(tabbedPane) }
     fileMenu.add(saveAs)
     val close = JMenuItem("Close")
     fileMenu.add(close)
     frame.jMenuBar = menuBar
-
-    //addTab(tabbedPane, "My Tab", font, noneLanguageSupport)
-    //addTab(tabbedPane, "Other Tab", font, noneLanguageSupport)
-    //addTab(tabbedPane, "Another one", font, noneLanguageSupport)
-
-    frame.contentPane.add(tabbedPane)
 
     frame.pack()
     if (frame.width < 500) {
@@ -156,5 +200,6 @@ private fun createAndShowGUI() {
 }
 
 fun main(args: Array<String>) {
+    languageSupportRegistry.register("py", pythonLanguageSupport)
     SwingUtilities.invokeLater { createAndShowGUI() }
 }

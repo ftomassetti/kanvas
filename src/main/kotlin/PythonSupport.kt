@@ -21,6 +21,7 @@ object pythonSyntaxScheme : SyntaxScheme(true) {
             Python3.STRING_LITERAL -> Color.YELLOW
             Python3.LONG_STRING_LITERAL_START -> Color.YELLOW
             Python3.IN_LONG_STRING -> Color.YELLOW
+            Python3.COMMENT -> Color.MAGENTA
             else -> null
         }
         if (color != null) {
@@ -30,7 +31,7 @@ object pythonSyntaxScheme : SyntaxScheme(true) {
     }
 }
 
-object PythonLanguageSupport : LanguageSupport {
+object pythonLanguageSupport : LanguageSupport {
     override val syntaxScheme: SyntaxScheme
         get() = pythonSyntaxScheme
     override val antlrLexerFactory: AntlrLexerFactory

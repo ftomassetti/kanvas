@@ -187,8 +187,10 @@ POWER_ASSIGN : '**=';
 IDIV_ASSIGN : '//=';
 
 SKIP_
- : ( SPACES | COMMENT | LINE_JOINING ) -> channel(EXTRA)
+ : ( SPACES  | LINE_JOINING ) -> channel(EXTRA)
  ;
+
+COMMENT: F_COMMENT -> channel(EXTRA);
 
 UNKNOWN_CHAR
  : .
@@ -332,7 +334,7 @@ fragment SPACES
  : [ \t]+
  ;
 
-fragment COMMENT
+fragment F_COMMENT
  : '#' ~[\r\n]*
  ;
 
