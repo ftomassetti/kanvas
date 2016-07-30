@@ -1,14 +1,13 @@
 
-import me.tomassetti.python.Python3
+import me.tomassetti.python.None
+import org.antlr.v4.runtime.Lexer
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme
 import org.fife.ui.rtextarea.RTextScrollPane
-import java.awt.Color
-import java.awt.Component
-import java.awt.Font
-import java.awt.Toolkit
+import java.awt.*
+import java.util.*
 import javax.swing.*
 import javax.swing.plaf.metal.MetalTabbedPaneUI
 import javax.swing.plaf.synth.SynthScrollBarUI
@@ -18,37 +17,42 @@ private val BACKGROUND_SUBTLE_HIGHLIGHT = Color(49, 50, 44)
 private val BACKGROUND_DARKER = Color(23, 24, 20)
 private val BACKGROUND_LIGHTER = Color(109, 109, 109)
 
-class TurinSyntaxScheme(useDefaults: Boolean) : SyntaxScheme(useDefaults) {
-    override fun getStyle(index: Int): Style {
-        val style = Style()
-        val color = when (index) {
-            Python3.DEF -> Color.GREEN
-            Python3.IMPORT -> Color.GREEN
-            Python3.PASS -> Color.GREEN
-            Python3.NAME -> Color.WHITE
-            Python3.COLON -> Color.LIGHT_GRAY
-            Python3.DOT -> Color.LIGHT_GRAY
-            Python3.OPEN_BRACE -> Color.LIGHT_GRAY
-            Python3.CLOSE_BRACE -> Color.LIGHT_GRAY
-            Python3.OPEN_PAREN -> Color.LIGHT_GRAY
-            Python3.CLOSE_PAREN -> Color.LIGHT_GRAY
-            Python3.STRING_LITERAL -> Color.YELLOW
-            Python3.LONG_STRING_LITERAL_START -> Color.YELLOW
-            Python3.IN_LONG_STRING -> Color.YELLOW
-            else -> null
-        }
-        if (color != null) {
-            style.foreground = color
-        }
-        return style
-    }
+interface LanguageSupport {
+    val syntaxScheme : SyntaxScheme
+    val antlrLexerFactory: AntlrLexerFactory
 }
 
-private fun makeTextPanel(font: Font) : Component {
-    val textArea = RSyntaxTextArea(20, 60)
-    (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker())
+object noneLanguageSupport : LanguageSupport {
+    override val syntaxScheme: SyntaxScheme
+        get() = object : SyntaxScheme(false) {
+            override fun getStyle(index: Int): Style {
+                val style = Style()
+                style.foreground = Color.WHITE
+                return style
+            }
+        }
+    override val antlrLexerFactory: AntlrLexerFactory
+        get() = object : AntlrLexerFactory {
+            override fun create(code: String): Lexer = None(org.antlr.v4.runtime.ANTLRInputStream(code))
+        }
 
-    textArea.syntaxScheme = TurinSyntaxScheme(true)
+}
+
+object LanguageSupportRegistry {
+    private val extensionsMap = HashMap<String, LanguageSupport>()
+
+    fun register(extension : String, languageSupport: LanguageSupport) {
+        extensionsMap[extension] = languageSupport
+    }
+    fun languageSupportForExtension(extension : String) : LanguageSupport = extensionsMap.getOrDefault(extension, noneLanguageSupport)
+}
+
+private fun makeTextPanel(font: Font, languageSupport: LanguageSupport) : Component {
+    val textArea = RSyntaxTextArea(20, 60)
+
+    (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker(languageSupport.antlrLexerFactory))
+
+    textArea.syntaxScheme = languageSupport.syntaxScheme
     textArea.isCodeFoldingEnabled = true
     textArea.font = font
     textArea.background = BACKGROUND
@@ -95,8 +99,8 @@ class MyTabbledPane : JTabbedPane() {
 
 }
 
-private fun addTab(tabbedPane: MyTabbledPane, title: String, font: Font) {
-    val panel1 = makeTextPanel(font)
+private fun addTab(tabbedPane: MyTabbledPane, title: String, font: Font, languageSupport: LanguageSupport) {
+    val panel1 = makeTextPanel(font, languageSupport)
     tabbedPane.addTab(title, null, panel1, "Go to $title")
     tabbedPane.setForegroundAt(tabbedPane.tabCount - 1, Color.white)
     tabbedPane.setBackgroundAt(tabbedPane.tabCount - 1, BACKGROUND_DARKER)
@@ -121,13 +125,33 @@ private fun createAndShowGUI() {
     frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
     val tabbedPane = MyTabbledPane()
-    addTab(tabbedPane, "My Tab", font)
-    addTab(tabbedPane, "Other Tab", font)
-    addTab(tabbedPane, "Another one", font)
+
+    val menuBar = JMenuBar()
+    val fileMenu = JMenu("File")
+    menuBar.add(fileMenu)
+    val open = JMenuItem("Open")
+    fileMenu.add(open)
+    val new = JMenuItem("New")
+    new.addActionListener { addTab(tabbedPane, "<UNNAMED>", font, noneLanguageSupport) }
+    fileMenu.add(new)
+    val save = JMenuItem("Save")
+    fileMenu.add(save)
+    val saveAs = JMenuItem("Save as")
+    fileMenu.add(saveAs)
+    val close = JMenuItem("Close")
+    fileMenu.add(close)
+    frame.jMenuBar = menuBar
+
+    //addTab(tabbedPane, "My Tab", font, noneLanguageSupport)
+    //addTab(tabbedPane, "Other Tab", font, noneLanguageSupport)
+    //addTab(tabbedPane, "Another one", font, noneLanguageSupport)
 
     frame.contentPane.add(tabbedPane)
 
     frame.pack()
+    if (frame.width < 500) {
+        frame.size = Dimension(500, 500)
+    }
     frame.isVisible = true
 }
 
