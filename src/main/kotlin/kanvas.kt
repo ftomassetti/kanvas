@@ -202,5 +202,6 @@ fun createAndShowKanvasGUI() {
 
 fun main(args: Array<String>) {
     languageSupportRegistry.register("py", pythonLanguageSupport)
+    languageSupportRegistry.register("sandy", sandyLanguageSupport)
     SwingUtilities.invokeLater { createAndShowKanvasGUI() }
 }
