@@ -13,7 +13,8 @@ object sandySyntaxScheme : SyntaxScheme(true) {
             SandyLexer.VAR -> Color.GREEN
             SandyLexer.ASSIGN -> Color.GREEN
             SandyLexer.ASTERISK, SandyLexer.DIVISION, SandyLexer.PLUS, SandyLexer.MINUS -> Color.WHITE
-            SandyLexer.DECLIT, SandyLexer.INTLIT -> Color.BLUE
+            SandyLexer.INTLIT, SandyLexer.DECLIT -> Color.BLUE
+            SandyLexer.UNMATCHED -> Color.RED
             SandyLexer.ID -> Color.MAGENTA
             SandyLexer.LPAREN, SandyLexer.RPAREN -> Color.WHITE
             else -> null
