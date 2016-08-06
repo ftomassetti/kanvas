@@ -36,14 +36,15 @@ dependencies {
   compile 'me.tomassetti:antlr-plus:0.1.1'
   testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
   testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+  testCompile 'junit:junit:4.12'
 }
 
 mainClassName = "KanvasKt"
 
 generateGrammarSource {
     maxHeapSize = "64m"
-    arguments += ['-package', 'me.tomassetti.lexers']
-    outputDirectory = new File("generated-src/antlr/main/me/tomassetti/lexers".toString())
+    arguments += ['-package', 'me.tomassetti.antlr']
+    outputDirectory = new File("generated-src/antlr/main/me/tomassetti/antlr".toString())
 }
 compileJava.dependsOn generateGrammarSource
 sourceSets {
@@ -62,3 +63,4 @@ idea {
         sourceDirs += file("generated-src/antlr/main")
     }
 }
+

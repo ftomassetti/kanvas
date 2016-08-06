@@ -4,7 +4,6 @@ lexer grammar SandyLexer;
     private static final int EXTRA = 1;
 }
 
-
 // Whitespace
 NEWLINE            : '\r\n' | 'r' | '\n' ;
 WS                 : [\t ]+ -> channel(EXTRA) ;

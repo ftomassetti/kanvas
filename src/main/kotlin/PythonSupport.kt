@@ -1,6 +1,6 @@
 package me.tomassetti.kanvas
 
-import me.tomassetti.lexers.Python3
+import me.tomassetti.antlr.Python3
 import org.antlr.v4.runtime.Lexer
 import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme
@@ -40,4 +40,6 @@ object pythonLanguageSupport : LanguageSupport {
         get() = object : AntlrLexerFactory {
             override fun create(code: String): Lexer = Python3(org.antlr.v4.runtime.ANTLRInputStream(code))
         }
+    override val parserData: ParserData?
+        get() = null
 }
