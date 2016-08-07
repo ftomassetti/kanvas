@@ -1,6 +1,9 @@
 
 import me.tomassetti.antlr.SandyLexer
 import me.tomassetti.antlr.SandyParser
+import me.tomassetti.kanvas.AntlrAutoCompletionSuggester
+import me.tomassetti.kanvas.EditorContextImpl
+import me.tomassetti.kanvas.TokenTypeImpl
 import me.tomassetti.kanvas.sandyLanguageSupport
 import kotlin.test.assertEquals
 import org.junit.Test as test

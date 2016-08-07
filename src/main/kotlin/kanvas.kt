@@ -1,17 +1,19 @@
 package me.tomassetti.kanvas
 
+import org.fife.ui.autocomplete.*
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rtextarea.RTextScrollPane
-import java.awt.Color
-import java.awt.Dimension
-import java.awt.Font
-import java.awt.Toolkit
+import java.awt.*
 import java.io.File
 import java.nio.charset.Charset
+import java.util.*
 import javax.swing.*
 import javax.swing.plaf.metal.MetalTabbedPaneUI
 import javax.swing.plaf.synth.SynthScrollBarUI
+import javax.swing.text.BadLocationException
+import javax.swing.text.JTextComponent
+import javax.swing.text.Segment
 
 private val BACKGROUND = Color(39, 40, 34)
 private val BACKGROUND_SUBTLE_HIGHLIGHT = Color(49, 50, 44)
@@ -51,6 +53,11 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
     textArea.foreground = Color.WHITE
     textArea.currentLineHighlightColor = BACKGROUND_SUBTLE_HIGHLIGHT
     val textPanel = TextPanel(textArea, file)
+
+    val provider = createCompletionProvider(languageSupport)
+    val ac = AutoCompletion(provider)
+    ac.install(textArea)
+
     textPanel.viewportBorder = BorderFactory.createEmptyBorder()
     textPanel.verticalScrollBar.ui = object : SynthScrollBarUI() {
         override fun configureScrollBarColors() {
@@ -58,6 +65,142 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
         }
     }
     return textPanel
+}
+
+fun  createCompletionProvider(languageSupport: LanguageSupport): CompletionProvider {
+    val cp = object : CompletionProviderBase() {
+
+        private val seg = Segment()
+        private val autoCompletionSuggester = AntlrAutoCompletionSuggester(languageSupport.parserData!!.ruleNames,
+                languageSupport.parserData!!.vocabulary, languageSupport.parserData!!.atn)
+
+        fun beforeCaret(comp: JTextComponent) : String {
+            println("ROOT ELEMENTS ${comp.document.rootElements.toList()}")
+            val doc = comp.document
+
+            val dot = comp.caretPosition
+            val root = doc.defaultRootElement
+            val index = root.getElementIndex(dot)
+            val elem = root.getElement(index)
+            var start = elem.startOffset
+            val len = dot - start
+            println("BEFORE ${doc.getText(start, len)}")
+            return doc.getText(start, len)
+        }
+
+        override fun getCompletionsImpl(comp: JTextComponent): MutableList<Completion>? {
+            val retVal = ArrayList<Completion>()
+            val text = getAlreadyEnteredText(comp)
+
+            if (text != null) {
+
+               /* var index = Collections.binarySearch(completions, text, comparator)
+                if (index < 0) { // No exact match
+                    index = -index - 1
+                } else {
+                    // If there are several overloads for the function being
+                    // completed, Collections.binarySearch() will return the index
+                    // of one of those overloads, but we must return all of them,
+                    // so search backward until we find the first one.
+                    var pos = index - 1
+                    while (pos > 0 && comparator.compare(completions.get(pos), text) === 0) {
+                        retVal.add(completions.get(pos))
+                        pos--
+                    }
+                }
+
+                while (index < completions.size()) {
+                    val c = completions.get(index)
+                    if (Util.startsWithIgnoreCase(c.getInputText(), text)) {
+                        retVal.add(c)
+                        index++
+                    } else {
+                        break
+                    }
+                }*/
+
+            }
+            println("TEXT <<<$text>>>")
+            val code = beforeCaret(comp)
+            autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory)).forEach {
+                if (it.type != -1) {
+                    retVal.add(BasicCompletion(this, languageSupport.parserData!!.vocabulary.getLiteralName(it.type)))
+                }
+            }
+
+            return retVal
+
+        }
+
+        protected fun isValidChar(ch: Char): Boolean {
+            return Character.isLetterOrDigit(ch) || ch == '_'
+        }
+
+        override fun getAlreadyEnteredText(comp: JTextComponent): String {
+            val doc = comp.document
+
+            val dot = comp.caretPosition
+            val root = doc.defaultRootElement
+            val index = root.getElementIndex(dot)
+            val elem = root.getElement(index)
+            var start = elem.startOffset
+            var len = dot - start
+            try {
+                doc.getText(start, len)
+            } catch (ble: BadLocationException) {
+                ble.printStackTrace()
+                return EMPTY_STRING
+            }
+
+            val segEnd = seg.offset + len
+            start = segEnd - 1
+            println("OFFSET ${seg.offset}")
+            println("ARRAY ${seg.array}")
+            while (start >= seg.offset && seg.array != null && isValidChar(seg.array[start])) {
+                start--
+            }
+            start++
+
+            len = segEnd - start
+            return if (len == 0) EMPTY_STRING else String(seg.array, start, len)
+        }
+
+        override fun getCompletionsAt(comp: JTextComponent, p: Point?): MutableList<Completion>? {
+            val doc = comp.document
+
+            val dot = comp.caretPosition
+            val root = doc.defaultRootElement
+            val index = root.getElementIndex(dot)
+            val elem = root.getElement(index)
+            var start = elem.startOffset
+            val len = dot - start
+            println("BEFORE ${doc.getText(start, len)}")
+
+            //throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+            return LinkedList<Completion>()
+        }
+
+        override fun getParameterizedCompletions(comp: JTextComponent): MutableList<ParameterizedCompletion>? {
+            val doc = comp.document
+
+            val dot = comp.caretPosition
+            val root = doc.defaultRootElement
+            val index = root.getElementIndex(dot)
+            val elem = root.getElement(index)
+            var start = elem.startOffset
+            val len = dot - start
+            println("BEFOREPARAM  ${doc.getText(start, len)}")
+
+            //throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+            return LinkedList<ParameterizedCompletion>()
+        }
+
+    }
+    println("SETTING CP")
+    //val completionProvider = DefaultCompletionProvider()
+    //completionProvider.addCompletion(BasicCompletion(completionProvider, "a"))
+    //return completionProvider
+    return cp
 }
 
 internal class NoInsetTabbedPaneUI : MetalTabbedPaneUI() {
