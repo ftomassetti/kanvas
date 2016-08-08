@@ -69,13 +69,19 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
 
 fun  createCompletionProvider(languageSupport: LanguageSupport): CompletionProvider {
     val cp = object : CompletionProviderBase() {
+        override fun getCompletionsAt(comp: JTextComponent?, p: Point?): MutableList<Completion>? {
+            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun getParameterizedCompletions(tc: JTextComponent?): MutableList<ParameterizedCompletion>? {
+            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
 
         private val seg = Segment()
         private val autoCompletionSuggester = AntlrAutoCompletionSuggester(languageSupport.parserData!!.ruleNames,
                 languageSupport.parserData!!.vocabulary, languageSupport.parserData!!.atn)
 
-        fun beforeCaret(comp: JTextComponent) : String {
-            println("ROOT ELEMENTS ${comp.document.rootElements.toList()}")
+        private fun beforeCaret(comp: JTextComponent) : String {
             val doc = comp.document
 
             val dot = comp.caretPosition
@@ -84,47 +90,21 @@ fun  createCompletionProvider(languageSupport: LanguageSupport): CompletionProvi
             val elem = root.getElement(index)
             var start = elem.startOffset
             val len = dot - start
-            println("BEFORE ${doc.getText(start, len)}")
             return doc.getText(start, len)
         }
 
         override fun getCompletionsImpl(comp: JTextComponent): MutableList<Completion>? {
             val retVal = ArrayList<Completion>()
-            val text = getAlreadyEnteredText(comp)
-
-            if (text != null) {
-
-               /* var index = Collections.binarySearch(completions, text, comparator)
-                if (index < 0) { // No exact match
-                    index = -index - 1
-                } else {
-                    // If there are several overloads for the function being
-                    // completed, Collections.binarySearch() will return the index
-                    // of one of those overloads, but we must return all of them,
-                    // so search backward until we find the first one.
-                    var pos = index - 1
-                    while (pos > 0 && comparator.compare(completions.get(pos), text) === 0) {
-                        retVal.add(completions.get(pos))
-                        pos--
-                    }
-                }
-
-                while (index < completions.size()) {
-                    val c = completions.get(index)
-                    if (Util.startsWithIgnoreCase(c.getInputText(), text)) {
-                        retVal.add(c)
-                        index++
-                    } else {
-                        break
-                    }
-                }*/
-
-            }
-            println("TEXT <<<$text>>>")
             val code = beforeCaret(comp)
             autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory)).forEach {
                 if (it.type != -1) {
-                    retVal.add(BasicCompletion(this, languageSupport.parserData!!.vocabulary.getLiteralName(it.type)))
+                    var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(it.type)
+                    if (proposition != null) {
+                        if (proposition.startsWith("'") && proposition.endsWith("'")) {
+                            proposition = proposition.substring(1, proposition.length - 1)
+                        }
+                        retVal.add(BasicCompletion(this, proposition))
+                    }
                 }
             }
 
@@ -154,8 +134,6 @@ fun  createCompletionProvider(languageSupport: LanguageSupport): CompletionProvi
 
             val segEnd = seg.offset + len
             start = segEnd - 1
-            println("OFFSET ${seg.offset}")
-            println("ARRAY ${seg.array}")
             while (start >= seg.offset && seg.array != null && isValidChar(seg.array[start])) {
                 start--
             }
@@ -165,41 +143,7 @@ fun  createCompletionProvider(languageSupport: LanguageSupport): CompletionProvi
             return if (len == 0) EMPTY_STRING else String(seg.array, start, len)
         }
 
-        override fun getCompletionsAt(comp: JTextComponent, p: Point?): MutableList<Completion>? {
-            val doc = comp.document
-
-            val dot = comp.caretPosition
-            val root = doc.defaultRootElement
-            val index = root.getElementIndex(dot)
-            val elem = root.getElement(index)
-            var start = elem.startOffset
-            val len = dot - start
-            println("BEFORE ${doc.getText(start, len)}")
-
-            //throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
-            return LinkedList<Completion>()
-        }
-
-        override fun getParameterizedCompletions(comp: JTextComponent): MutableList<ParameterizedCompletion>? {
-            val doc = comp.document
-
-            val dot = comp.caretPosition
-            val root = doc.defaultRootElement
-            val index = root.getElementIndex(dot)
-            val elem = root.getElement(index)
-            var start = elem.startOffset
-            val len = dot - start
-            println("BEFOREPARAM  ${doc.getText(start, len)}")
-
-            //throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
-            return LinkedList<ParameterizedCompletion>()
-        }
-
     }
-    println("SETTING CP")
-    //val completionProvider = DefaultCompletionProvider()
-    //completionProvider.addCompletion(BasicCompletion(completionProvider, "a"))
-    //return completionProvider
     return cp
 }
 
