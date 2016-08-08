@@ -24,14 +24,14 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  *
- * Project      : python3-parser; an ANTLR4 grammar for Python 3
+ * Project      : python3-parser; an ANTLR4 antlrGrammar for Python 3
  *                https://github.com/bkiers/python3-parser
  * Developed by : Bart Kiers, bart@big-o.nl
  */
 lexer grammar Python3;
 
 // All comments that start with "///" are copy-pasted from
-// The Python Language Reference: https://docs.python.org/3.3/reference/grammar.html
+// The Python Language Reference: https://docs.python.org/3.3/reference/antlrGrammar.html
 
 tokens { INDENT, DEDENT }
 

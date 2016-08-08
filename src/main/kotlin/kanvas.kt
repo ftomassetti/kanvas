@@ -1,17 +1,19 @@
 package me.tomassetti.kanvas
 
+import org.fife.ui.autocomplete.*
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rtextarea.RTextScrollPane
-import java.awt.Color
-import java.awt.Dimension
-import java.awt.Font
-import java.awt.Toolkit
+import java.awt.*
 import java.io.File
 import java.nio.charset.Charset
+import java.util.*
 import javax.swing.*
 import javax.swing.plaf.metal.MetalTabbedPaneUI
 import javax.swing.plaf.synth.SynthScrollBarUI
+import javax.swing.text.BadLocationException
+import javax.swing.text.JTextComponent
+import javax.swing.text.Segment
 
 private val BACKGROUND = Color(39, 40, 34)
 private val BACKGROUND_SUBTLE_HIGHLIGHT = Color(49, 50, 44)
@@ -51,6 +53,11 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
     textArea.foreground = Color.WHITE
     textArea.currentLineHighlightColor = BACKGROUND_SUBTLE_HIGHLIGHT
     val textPanel = TextPanel(textArea, file)
+
+    val provider = createCompletionProvider(languageSupport)
+    val ac = AutoCompletion(provider)
+    ac.install(textArea)
+
     textPanel.viewportBorder = BorderFactory.createEmptyBorder()
     textPanel.verticalScrollBar.ui = object : SynthScrollBarUI() {
         override fun configureScrollBarColors() {
@@ -58,6 +65,86 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
         }
     }
     return textPanel
+}
+
+fun  createCompletionProvider(languageSupport: LanguageSupport): CompletionProvider {
+    val cp = object : CompletionProviderBase() {
+        override fun getCompletionsAt(comp: JTextComponent?, p: Point?): MutableList<Completion>? {
+            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun getParameterizedCompletions(tc: JTextComponent?): MutableList<ParameterizedCompletion>? {
+            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        private val seg = Segment()
+        private val autoCompletionSuggester = AntlrAutoCompletionSuggester(languageSupport.parserData!!.ruleNames,
+                languageSupport.parserData!!.vocabulary, languageSupport.parserData!!.atn)
+
+        private fun beforeCaret(comp: JTextComponent) : String {
+            val doc = comp.document
+
+            val dot = comp.caretPosition
+            val root = doc.defaultRootElement
+            val index = root.getElementIndex(dot)
+            val elem = root.getElement(index)
+            var start = elem.startOffset
+            val len = dot - start
+            return doc.getText(start, len)
+        }
+
+        override fun getCompletionsImpl(comp: JTextComponent): MutableList<Completion>? {
+            val retVal = ArrayList<Completion>()
+            val code = beforeCaret(comp)
+            autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory)).forEach {
+                if (it.type != -1) {
+                    var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(it.type)
+                    if (proposition != null) {
+                        if (proposition.startsWith("'") && proposition.endsWith("'")) {
+                            proposition = proposition.substring(1, proposition.length - 1)
+                        }
+                        retVal.add(BasicCompletion(this, proposition))
+                    }
+                }
+            }
+
+            return retVal
+
+        }
+
+        protected fun isValidChar(ch: Char): Boolean {
+            return Character.isLetterOrDigit(ch) || ch == '_'
+        }
+
+        override fun getAlreadyEnteredText(comp: JTextComponent): String {
+            val doc = comp.document
+
+            val dot = comp.caretPosition
+            val root = doc.defaultRootElement
+            val index = root.getElementIndex(dot)
+            val elem = root.getElement(index)
+            var start = elem.startOffset
+            var len = dot - start
+            try {
+                doc.getText(start, len)
+            } catch (ble: BadLocationException) {
+                ble.printStackTrace()
+                return EMPTY_STRING
+            }
+
+            val segEnd = seg.offset + len
+            start = segEnd - 1
+            while (start >= seg.offset && seg.array != null && isValidChar(seg.array[start])) {
+                start--
+            }
+            start++
+
+            len = segEnd - start
+            return if (len == 0) EMPTY_STRING else String(seg.array, start, len)
+        }
+
+    }
+    return cp
 }
 
 internal class NoInsetTabbedPaneUI : MetalTabbedPaneUI() {

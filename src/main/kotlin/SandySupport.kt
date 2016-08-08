@@ -1,6 +1,7 @@
 package me.tomassetti.kanvas
 
-import me.tomassetti.lexers.SandyLexer
+import me.tomassetti.antlr.SandyLexer
+import me.tomassetti.antlr.SandyParser
 import org.antlr.v4.runtime.Lexer
 import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme
@@ -33,4 +34,6 @@ object sandyLanguageSupport : LanguageSupport {
         get() = object : AntlrLexerFactory {
             override fun create(code: String): Lexer = SandyLexer(org.antlr.v4.runtime.ANTLRInputStream(code))
         }
+    override val parserData: ParserData?
+        get() = ParserData(SandyParser.ruleNames, SandyLexer.VOCABULARY, SandyParser._ATN)
 }
