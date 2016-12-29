@@ -1,31 +1,3 @@
-buildscript {
-   ext.kotlin_version = '1.0.6'
-
-   repositories {
-     mavenCentral()
-     maven {
-        name 'JFrog OSS snapshot repo'
-        url  'https://oss.jfrog.org/oss-snapshot-local/'
-     }
-     jcenter()
-   }
-
-   dependencies {
-     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-   }
-}
-
-apply plugin: 'kotlin'
-apply plugin: 'java'
-apply plugin: 'antlr'
-apply plugin: 'maven'
-
-repositories {
-  mavenLocal()
-  mavenCentral()
-  jcenter()
-}
-
 dependencies {
   antlr "org.antlr:antlr4:4.5.1"
   compile "org.antlr:antlr4-runtime:4.5.1"

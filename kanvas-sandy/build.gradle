@@ -1,36 +1,3 @@
-buildscript {
-   ext.kotlin_version = '1.0.6'
-
-   repositories {
-     mavenCentral()
-     maven {
-        name 'JFrog OSS snapshot repo'
-        url  'https://oss.jfrog.org/oss-snapshot-local/'
-     }
-     jcenter()
-   }
-
-   dependencies {
-     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-   }
-}
-
-apply plugin: 'kotlin'
-apply plugin: 'application'
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'antlr'
-apply plugin: 'maven'
-
-project.group   = "me.tomassetti"
-project.version = "0.1"
-
-repositories {
-  mavenLocal()
-  mavenCentral()
-  jcenter()
-}
-
 dependencies {
   antlr "org.antlr:antlr4:4.5.1"
   compile "org.antlr:antlr4-runtime:4.5.1"
@@ -43,8 +10,6 @@ dependencies {
   testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
   testCompile 'junit:junit:4.12'
 }
-
-mainClassName = "KanvasKt"
 
 generateGrammarSource {
     maxHeapSize = "64m"
