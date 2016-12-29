@@ -5,6 +5,9 @@ import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.Vocabulary
 import org.antlr.v4.runtime.atn.ATN
+import org.fife.ui.autocomplete.BasicCompletion
+import org.fife.ui.autocomplete.Completion
+import org.fife.ui.autocomplete.CompletionProvider
 import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme
 import java.awt.Color
@@ -17,9 +20,34 @@ interface LanguageSupport {
     val syntaxScheme : SyntaxScheme
     val antlrLexerFactory: AntlrLexerFactory
     val parserData: ParserData?
+    val propositionProvider: PropositionProvider
 }
 
-object noneLanguageSupport : LanguageSupport {
+interface PropositionProvider {
+    fun fromTokenType(completionProvider: CompletionProvider, tokenType: Int) : List<Completion>
+}
+
+class DefaultLanguageSupport(val languageSupport: LanguageSupport) : PropositionProvider {
+    override fun fromTokenType(completionProvider: CompletionProvider, tokenType: Int): List<Completion> {
+        val res = LinkedList<Completion>()
+        var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(tokenType)
+        if (proposition != null) {
+            if (proposition.startsWith("'") && proposition.endsWith("'")) {
+                proposition = proposition.substring(1, proposition.length - 1)
+            }
+            res.add(BasicCompletion(completionProvider, proposition))
+        }
+        return res
+    }
+}
+
+abstract class BaseLanguageSupport : LanguageSupport {
+
+    override val propositionProvider: PropositionProvider
+        get() = DefaultLanguageSupport(this)
+}
+
+object noneLanguageSupport : BaseLanguageSupport() {
 
     override val syntaxScheme: SyntaxScheme
         get() = object : SyntaxScheme(false) {

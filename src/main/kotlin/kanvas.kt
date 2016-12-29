@@ -154,13 +154,7 @@ fun createCompletionProvider(languageSupport: LanguageSupport): CompletionProvid
             val code = beforeCaret(comp)
             autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory)).forEach {
                 if (it.type != -1) {
-                    var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(it.type)
-                    if (proposition != null) {
-                        if (proposition.startsWith("'") && proposition.endsWith("'")) {
-                            proposition = proposition.substring(1, proposition.length - 1)
-                        }
-                        retVal.add(BasicCompletion(this, proposition))
-                    }
+                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this, it.type))
                 }
             }
 

@@ -33,7 +33,7 @@ object pythonSyntaxScheme : SyntaxScheme(true) {
     }
 }
 
-object pythonLanguageSupport : LanguageSupport {
+object pythonLanguageSupport : BaseLanguageSupport() {
     override val syntaxScheme: SyntaxScheme
         get() = pythonSyntaxScheme
     override val antlrLexerFactory: AntlrLexerFactory

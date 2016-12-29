@@ -27,7 +27,7 @@ object sandySyntaxScheme : SyntaxScheme(true) {
     }
 }
 
-object sandyLanguageSupport : LanguageSupport {
+object sandyLanguageSupport : BaseLanguageSupport() {
     override val syntaxScheme: SyntaxScheme
         get() = sandySyntaxScheme
     override val antlrLexerFactory: AntlrLexerFactory
