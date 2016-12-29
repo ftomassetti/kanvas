@@ -1,81 +1,34 @@
 buildscript {
-   ext.kotlin_version = '1.0.6'
+    ext.kotlin_version = '1.0.6'
 
-   repositories {
-     mavenCentral()
-     maven {
-        name 'JFrog OSS snapshot repo'
-        url  'https://oss.jfrog.org/oss-snapshot-local/'
-     }
-     jcenter()
-   }
-
-   dependencies {
-     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-   }
-}
-
-apply plugin: 'kotlin'
-apply plugin: 'application'
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'antlr'
-apply plugin: 'maven'
-
-project.group   = "me.tomassetti"
-project.version = "0.1"
-
-repositories {
-  mavenLocal()
-  mavenCentral()
-  jcenter()
-}
-
-dependencies {
-  antlr "org.antlr:antlr4:4.5.1"
-  compile "org.antlr:antlr4-runtime:4.5.1"
-  compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-  compile 'com.fifesoft:rsyntaxtextarea:2.5.8'
-  compile 'com.fifesoft:autocomplete:2.5.8'
-  testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-  testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
-  testCompile 'junit:junit:4.12'
-}
-
-mainClassName = "KanvasKt"
-
-generateGrammarSource {
-    maxHeapSize = "64m"
-    arguments += ['-package', 'me.tomassetti.antlr']
-    outputDirectory = new File("generated-src/antlr/main/me/tomassetti/antlr".toString())
-}
-compileJava.dependsOn generateGrammarSource
-sourceSets {
-    generated {
-        java.srcDir 'generated-src/antlr/main/'
-    }
-}
-compileJava.source sourceSets.generated.java, sourceSets.main.java
-
-clean{
-    delete "generated-src"
-}
-
-idea {
-    module {
-        sourceDirs += file("generated-src/antlr/main")
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs 'generated-src/antlr/main'
+    repositories {
+        mavenCentral()
+        maven {
+            name 'JFrog OSS snapshot repo'
+            url  'https://oss.jfrog.org/oss-snapshot-local/'
         }
-        kotlin {
-            srcDirs 'src/main/kotlin'
-        }
+        jcenter()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
+allprojects {
+
+    apply plugin: 'kotlin'
+    apply plugin: 'java'
+    apply plugin: 'antlr'
+    apply plugin: 'maven'
+    apply plugin: 'idea'
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
+
+    project.group   = "me.tomassetti"
+    project.version = "0.1"
+}

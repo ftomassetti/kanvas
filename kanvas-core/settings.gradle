@@ -16,7 +16,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'kanvas-parent'
-include 'kanvas-core'
-include 'kanvas-python'
-include 'kanvas-sandy'
+rootProject.name = 'kanvas-core'
