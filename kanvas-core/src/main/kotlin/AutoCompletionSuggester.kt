@@ -102,15 +102,8 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary, val 
                     return Pair(false, this)
                 }
             }
-            is BasicState, is BlockEndState,is StarLoopbackState, is PlusLoopbackState -> return Pair(true, this)
-            /*// TODO to be verified
-            is TokensStartState -> {
-                println("FIND TOKEN START STATE $state with stack $states")
-                println("  transitions=${state.transitions.map { it.describe(ruleNames, vocabulary) }}")
-                println("  ruleIndex=${state.ruleIndex}")
-                return Pair(true, ParserStack(ruleNames, vocabulary, states.plus(state)))
-            }*/
-            else -> throw UnsupportedOperationException(state.javaClass.canonicalName)
+            is BasicState,is StarLoopbackState, is PlusLoopbackState -> return Pair(true, this)
+            else -> throw UnsupportedOperationException("Unsupported state: ${state.javaClass.canonicalName}")
         }
     }
 
@@ -134,14 +127,31 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     state: ATNState, tokens: MyTokenStream, collector: Collector,
                     parserStack: ParserStack,
                     alreadyPassed: Set<Int> = HashSet<Int>(), history : List<String> = listOf("start")) {
+    println("PROCESSING state=${state.describe()}")
+    println("\tparserStack=${parserStack.describe()}")
+    println("\talreadyPassed=${alreadyPassed}")
+    println("\thistory=${history.joinToString(", ")}")
+
     val atCaret = tokens.atCaret()
+    println("\tatCaret=${atCaret}")
+    if (!atCaret) {
+        println("\tnext token = ${tokens.next()}")
+    }
     val stackRes = parserStack.process(state)
     if (!stackRes.first) {
+        println("\tinvalid stack, returning")
         return
     }
 
     state.transitions.forEach {
+        println("\t\ttransition: ${it.describe(ruleNames, vocabulary)}")
+    }
+
+    state.transitions.forEach {
         val desc = describe(ruleNames, vocabulary, state, it)
+        //if (atCaret) {
+        //    println("Meeting caret: $desc \n\ttransition: ${it.describe(ruleNames, vocabulary)}\n\tparserStack:${parserStack.describe()}")
+        //}
         when {
             it.isEpsilon -> {
                 if (!alreadyPassed.contains(it.target.stateNumber)) {
@@ -155,6 +165,8 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                 if (atCaret) {
                     if (isCompatibleWithStack(it.target, parserStack)) {
                         collector.collect(it.label)
+                    } else {
+                        println("\tNOT COMPATIBLE")
                     }
                 } else {
                     if (nextTokenType.type == it.label) {
@@ -168,6 +180,8 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     if (atCaret) {
                         if (isCompatibleWithStack(it.target, parserStack)) {
                             collector.collect(sym)
+                        } else {
+                            println("\tNOT COMPATIBLE")
                         }
                     } else {
                         if (nextTokenType.type == sym) {
@@ -176,16 +190,7 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     }
                 }
             }
-            /*it is WildcardTransition -> {
-                if (atCaret) {
-                    if (isCompatibleWithStack(it.target, parserStack)) {
-                        //
-                    }
-                } else {
-                    process(ruleNames, vocabulary, it.target, tokens.move(), collector, stackRes.second, HashSet<Int>(), history.plus(desc))
-                }
-            }*/
-            else -> throw UnsupportedOperationException(it.javaClass.canonicalName)
+            else -> throw UnsupportedOperationException("Transition not supported ${it.javaClass.canonicalName}")
         }
     }
 }

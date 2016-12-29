@@ -2,7 +2,7 @@ import org.antlr.v4.runtime.Vocabulary
 import org.antlr.v4.runtime.atn.*
 
 fun ATNState.describe() : String = when(this) {
-    is RuleStartState -> "rule start (stop -> ${this.stopState}) isLeftRec ${this.isLeftRecursiveRule}  (ruleIndex=${this.ruleIndex})"
+    is RuleStartState -> "rule start (stop -> ${this.stopState}) ${if (this.isLeftRecursiveRule) "leftRec " else ""}(ruleIndex=${this.ruleIndex})"
     is RuleStopState -> "rule stop (ruleIndex=${this.ruleIndex})"
     is BasicState -> "basic"
     is PlusBlockStartState -> "plus block start (loopback ${this.loopBackState})"
