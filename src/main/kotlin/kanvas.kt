@@ -11,9 +11,7 @@ import java.util.*
 import javax.swing.*
 import javax.swing.plaf.metal.MetalTabbedPaneUI
 import javax.swing.plaf.synth.SynthScrollBarUI
-import javax.swing.text.BadLocationException
-import javax.swing.text.JTextComponent
-import javax.swing.text.Segment
+import javax.swing.text.*
 
 private val BACKGROUND = Color(39, 40, 34)
 private val BACKGROUND_SUBTLE_HIGHLIGHT = Color(49, 50, 44)
@@ -130,8 +128,22 @@ fun createCompletionProvider(languageSupport: LanguageSupport): CompletionProvid
 
             val dot = comp.caretPosition
             val root = doc.defaultRootElement
-            val index = root.getElementIndex(dot)
-            val elem = root.getElement(index)
+            val currLineIndex = root.getElementIndex(dot)
+            val sb = StringBuffer()
+            for (i in 0 until currLineIndex) {
+                val elem = root.getElement(i)
+                var start = elem.startOffset
+                val len = elem.endOffset - start
+                sb.append(doc.getText(start, len))
+            }
+
+            sb.append(beforeCaretOnCurrentLine(doc, dot, currLineIndex))
+            return sb.toString()
+        }
+
+        private fun beforeCaretOnCurrentLine(doc: Document, dot:Int, currLineIndex: Int) : String {
+            val root = doc.defaultRootElement
+            val elem = root.getElement(currLineIndex)
             var start = elem.startOffset
             val len = dot - start
             return doc.getText(start, len)
@@ -140,7 +152,6 @@ fun createCompletionProvider(languageSupport: LanguageSupport): CompletionProvid
         override fun getCompletionsImpl(comp: JTextComponent): MutableList<Completion>? {
             val retVal = ArrayList<Completion>()
             val code = beforeCaret(comp)
-            //println("INVOKED")
             autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory)).forEach {
                 if (it.type != -1) {
                     var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(it.type)
