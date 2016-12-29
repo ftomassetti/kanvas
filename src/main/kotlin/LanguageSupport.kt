@@ -36,6 +36,10 @@ object noneLanguageSupport : LanguageSupport {
 
     override val parserData: ParserData?
         get() = null
+
+    override fun toString(): String {
+        return "default language support"
+    }
 }
 
 object languageSupportRegistry {

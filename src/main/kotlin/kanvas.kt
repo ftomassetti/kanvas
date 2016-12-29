@@ -67,17 +67,61 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
     return textPanel
 }
 
-fun  createCompletionProvider(languageSupport: LanguageSupport): CompletionProvider {
-    val cp = object : CompletionProviderBase() {
-        override fun getCompletionsAt(comp: JTextComponent?, p: Point?): MutableList<Completion>? {
-            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+private abstract class AbstractCompletionProviderBase : CompletionProviderBase() {
+    private val seg = Segment()
+
+    override fun getCompletionsAt(comp: JTextComponent?, p: Point?): MutableList<Completion>? {
+        throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getParameterizedCompletions(tc: JTextComponent?): MutableList<ParameterizedCompletion>? {
+        throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    protected fun isValidChar(ch: Char): Boolean {
+        return Character.isLetterOrDigit(ch) || ch == '_'
+    }
+
+    override fun getAlreadyEnteredText(comp: JTextComponent): String {
+        val doc = comp.document
+
+        val dot = comp.caretPosition
+        val root = doc.defaultRootElement
+        val index = root.getElementIndex(dot)
+        val elem = root.getElement(index)
+        var start = elem.startOffset
+        var len = dot - start
+        try {
+            doc.getText(start, len)
+        } catch (ble: BadLocationException) {
+            ble.printStackTrace()
+            return EMPTY_STRING
         }
 
-        override fun getParameterizedCompletions(tc: JTextComponent?): MutableList<ParameterizedCompletion>? {
-            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val segEnd = seg.offset + len
+        start = segEnd - 1
+        while (start >= seg.offset && seg.array != null && isValidChar(seg.array[start])) {
+            start--
         }
+        start++
 
-        private val seg = Segment()
+        len = segEnd - start
+        return if (len == 0) EMPTY_STRING else String(seg.array, start, len)
+    }
+}
+
+fun createCompletionProvider(languageSupport: LanguageSupport): CompletionProvider {
+    if (languageSupport.parserData == null) {
+        return object : AbstractCompletionProviderBase() {
+
+            override fun getCompletionsImpl(comp: JTextComponent?): MutableList<Completion> {
+                return LinkedList()
+            }
+
+        }
+    }
+    val cp = object : AbstractCompletionProviderBase() {
+
         private val autoCompletionSuggester = AntlrAutoCompletionSuggester(languageSupport.parserData!!.ruleNames,
                 languageSupport.parserData!!.vocabulary, languageSupport.parserData!!.atn)
 
@@ -96,8 +140,11 @@ fun  createCompletionProvider(languageSupport: LanguageSupport): CompletionProvi
         override fun getCompletionsImpl(comp: JTextComponent): MutableList<Completion>? {
             val retVal = ArrayList<Completion>()
             val code = beforeCaret(comp)
+            println("INVOKED")
             autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory)).forEach {
+                println("OPT A $it")
                 if (it.type != -1) {
+                    println("OPT B $it")
                     var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(it.type)
                     if (proposition != null) {
                         if (proposition.startsWith("'") && proposition.endsWith("'")) {
@@ -110,37 +157,6 @@ fun  createCompletionProvider(languageSupport: LanguageSupport): CompletionProvi
 
             return retVal
 
-        }
-
-        protected fun isValidChar(ch: Char): Boolean {
-            return Character.isLetterOrDigit(ch) || ch == '_'
-        }
-
-        override fun getAlreadyEnteredText(comp: JTextComponent): String {
-            val doc = comp.document
-
-            val dot = comp.caretPosition
-            val root = doc.defaultRootElement
-            val index = root.getElementIndex(dot)
-            val elem = root.getElement(index)
-            var start = elem.startOffset
-            var len = dot - start
-            try {
-                doc.getText(start, len)
-            } catch (ble: BadLocationException) {
-                ble.printStackTrace()
-                return EMPTY_STRING
-            }
-
-            val segEnd = seg.offset + len
-            start = segEnd - 1
-            while (start >= seg.offset && seg.array != null && isValidChar(seg.array[start])) {
-                start--
-            }
-            start++
-
-            len = segEnd - start
-            return if (len == 0) EMPTY_STRING else String(seg.array, start, len)
         }
 
     }
@@ -178,19 +194,6 @@ class MyTabbedPane : JTabbedPane() {
 
 }
 
-private fun addTab(tabbedPane: MyTabbedPane, title: String, font: Font, initialContenxt: String = "",
-                   languageSupport: LanguageSupport = noneLanguageSupport,
-                   file: File? = null) {
-    val panel = makeTextPanel(font, languageSupport, initialContenxt, file)
-    tabbedPane.addTab(title, null, panel, "Go to $title")
-    tabbedPane.setForegroundAt(tabbedPane.tabCount - 1, Color.white)
-    tabbedPane.setBackgroundAt(tabbedPane.tabCount - 1, BACKGROUND_DARKER)
-}
-
-val APP_TITLE = "Kanvas"
-
-val font: Font = Font.createFont(Font.TRUETYPE_FONT, Object().javaClass.getResourceAsStream("/CutiveMono-Regular.ttf"))
-        .deriveFont(24.0f)
 
 //
 // Commands
@@ -230,65 +233,89 @@ private fun closeCommand(tabbedPane : MyTabbedPane) {
     (tabbedPane.selectedComponent as TextPanel).close()
 }
 
-private fun openCommand(tabbedPane: MyTabbedPane) {
-    val fc = JFileChooser()
-    val res = fc.showOpenDialog(tabbedPane)
-    if (res == JFileChooser.APPROVE_OPTION) {
-        addTab(tabbedPane, fc.selectedFile.name, font, fc.selectedFile.readText(Charset.defaultCharset()),
-                languageSupportRegistry.languageSupportForFile(fc.selectedFile),
-                fc.selectedFile)
-    }
-}
-
 //
 // Public API
 //
 
-fun createAndShowKanvasGUI() {
-    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+class Kanvas {
 
-    val xToolkit = Toolkit.getDefaultToolkit()
-    val awtAppClassNameField = xToolkit.javaClass.getDeclaredField("awtAppClassName")
-    awtAppClassNameField.isAccessible = true
-    awtAppClassNameField.set(xToolkit, APP_TITLE)
-    
-    val frame = JFrame(APP_TITLE)
-    frame.background = BACKGROUND_DARKER
-    frame.contentPane.background = BACKGROUND_DARKER
-    frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+    val APP_TITLE = "Kanvas"
 
-    val tabbedPane = MyTabbedPane()
-    frame.contentPane.add(tabbedPane)
+    val defaultFont: Font = Font.createFont(Font.TRUETYPE_FONT, Object().javaClass.getResourceAsStream("/CutiveMono-Regular.ttf"))
+            .deriveFont(24.0f)
 
-    val menuBar = JMenuBar()
-    val fileMenu = JMenu("File")
-    menuBar.add(fileMenu)
-    val open = JMenuItem("Open")
-    open.addActionListener { openCommand(tabbedPane) }
-    fileMenu.add(open)
-    val new = JMenuItem("New")
-    new.addActionListener { addTab(tabbedPane, "<UNNAMED>", font) }
-    fileMenu.add(new)
-    val save = JMenuItem("Save")
-    save.addActionListener { saveCommand(tabbedPane) }
-    fileMenu.add(save)
-    val saveAs = JMenuItem("Save as")
-    saveAs.addActionListener { saveAsCommand(tabbedPane) }
-    fileMenu.add(saveAs)
-    val close = JMenuItem("Close")
-    close.addActionListener { closeCommand(tabbedPane) }
-    fileMenu.add(close)
-    frame.jMenuBar = menuBar
+    private val tabbedPane = MyTabbedPane()
 
-    frame.pack()
-    if (frame.width < 500) {
-        frame.size = Dimension(500, 500)
+    fun addTab(title: String, font: Font = defaultFont, initialContenxt: String = "",
+                       languageSupport: LanguageSupport = noneLanguageSupport,
+                       file: File? = null) {
+        try {
+            val panel = makeTextPanel(font, languageSupport, initialContenxt, file)
+            tabbedPane.addTab(title, null, panel, "Go to $title")
+            tabbedPane.setForegroundAt(tabbedPane.tabCount - 1, Color.white)
+            tabbedPane.setBackgroundAt(tabbedPane.tabCount - 1, BACKGROUND_DARKER)
+        } catch (e : Exception) {
+            JOptionPane.showMessageDialog(tabbedPane, "Error creating tab for language ${languageSupport}: ${e.message}")
+            e.printStackTrace()
+        }
     }
-    frame.isVisible = true
+
+    private fun openCommand() {
+        val fc = JFileChooser()
+        val res = fc.showOpenDialog(tabbedPane)
+        if (res == JFileChooser.APPROVE_OPTION) {
+            addTab(fc.selectedFile.name, defaultFont, fc.selectedFile.readText(Charset.defaultCharset()),
+                    languageSupportRegistry.languageSupportForFile(fc.selectedFile),
+                    fc.selectedFile)
+        }
+    }
+
+    fun createAndShowKanvasGUI() {
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+
+        val xToolkit = Toolkit.getDefaultToolkit()
+        val awtAppClassNameField = xToolkit.javaClass.getDeclaredField("awtAppClassName")
+        awtAppClassNameField.isAccessible = true
+        awtAppClassNameField.set(xToolkit, APP_TITLE)
+
+        val frame = JFrame(APP_TITLE)
+        frame.background = BACKGROUND_DARKER
+        frame.contentPane.background = BACKGROUND_DARKER
+        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+
+        frame.contentPane.add(tabbedPane)
+
+        val menuBar = JMenuBar()
+        val fileMenu = JMenu("File")
+        menuBar.add(fileMenu)
+        val open = JMenuItem("Open")
+        open.addActionListener { openCommand() }
+        fileMenu.add(open)
+        val new = JMenuItem("New")
+        new.addActionListener { addTab("<UNNAMED>") }
+        fileMenu.add(new)
+        val save = JMenuItem("Save")
+        save.addActionListener { saveCommand(tabbedPane) }
+        fileMenu.add(save)
+        val saveAs = JMenuItem("Save as")
+        saveAs.addActionListener { saveAsCommand(tabbedPane) }
+        fileMenu.add(saveAs)
+        val close = JMenuItem("Close")
+        close.addActionListener { closeCommand(tabbedPane) }
+        fileMenu.add(close)
+        frame.jMenuBar = menuBar
+
+        frame.pack()
+        if (frame.width < 500) {
+            frame.size = Dimension(500, 500)
+        }
+        frame.isVisible = true
+    }
 }
 
 fun main(args: Array<String>) {
     languageSupportRegistry.register("py", pythonLanguageSupport)
     languageSupportRegistry.register("sandy", sandyLanguageSupport)
-    SwingUtilities.invokeLater { createAndShowKanvasGUI() }
+    val kanvas = Kanvas()
+    SwingUtilities.invokeLater { kanvas.createAndShowKanvasGUI() }
 }
