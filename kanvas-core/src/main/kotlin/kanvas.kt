@@ -6,6 +6,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.*
 import java.io.File
+import java.net.URL
 import java.nio.charset.Charset
 import java.util.*
 import javax.swing.*
@@ -273,6 +274,13 @@ class Kanvas {
         }
     }
 
+    private fun createKanvasIcon() : Image {
+        val url = ClassLoader.getSystemResource("kanvas-logo.png")
+        val kit = Toolkit.getDefaultToolkit()
+        val img = kit.createImage(url)
+        return img
+    }
+
     fun createAndShowKanvasGUI() {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
 
@@ -282,6 +290,7 @@ class Kanvas {
         awtAppClassNameField.set(xToolkit, APP_TITLE)
 
         val frame = JFrame(APP_TITLE)
+        frame.iconImage = createKanvasIcon()
         frame.background = BACKGROUND_DARKER
         frame.contentPane.background = BACKGROUND_DARKER
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
