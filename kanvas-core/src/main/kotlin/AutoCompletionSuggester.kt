@@ -131,28 +131,38 @@ private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Bo
     }
 }
 
+private val debugging = false
+
 private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     state: ATNState, tokens: MyTokenStream, collector: Collector,
                     parserStack: ParserStack,
                     alreadyPassed: Set<Int> = HashSet<Int>(), history : List<String> = listOf("start")) {
-    println("PROCESSING state=${state.describe()}")
-    println("\tparserStack=${parserStack.describe()}")
-    println("\talreadyPassed=${alreadyPassed}")
-    println("\thistory=${history.joinToString(", ")}")
+    if (debugging) {
+        println("PROCESSING state=${state.describe()}")
+        println("\tparserStack=${parserStack.describe()}")
+        println("\talreadyPassed=${alreadyPassed}")
+        println("\thistory=${history.joinToString(", ")}")
+    }
 
     val atCaret = tokens.atCaret()
-    println("\tatCaret=${atCaret}")
-    if (!atCaret) {
-        println("\tnext token = ${tokens.next()}")
+    if (debugging) {
+        println("\tatCaret=${atCaret}")
+        if (!atCaret) {
+            println("\tnext token = ${tokens.next()}")
+        }
     }
     val stackRes = parserStack.process(state)
     if (!stackRes.first) {
-        println("\tinvalid stack, returning")
+        if (debugging) {
+            println("\tinvalid stack, returning")
+        }
         return
     }
 
-    state.transitions.forEach {
-        println("\t\ttransition: ${it.describe(ruleNames, vocabulary)}")
+    if (debugging) {
+        state.transitions.forEach {
+            println("\t\ttransition: ${it.describe(ruleNames, vocabulary)}")
+        }
     }
 
     state.transitions.forEach {
@@ -173,7 +183,7 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                 if (atCaret) {
                     if (isCompatibleWithStack(it.target, parserStack)) {
                         collector.collect(it.label)
-                    } else {
+                    } else if (debugging) {
                         println("\tNOT COMPATIBLE")
                     }
                 } else {
@@ -188,7 +198,7 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     if (atCaret) {
                         if (isCompatibleWithStack(it.target, parserStack)) {
                             collector.collect(sym)
-                        } else {
+                        } else if (debugging) {
                             println("\tNOT COMPATIBLE")
                         }
                     } else {
