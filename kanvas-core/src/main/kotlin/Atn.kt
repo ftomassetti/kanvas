@@ -1,7 +1,7 @@
 import org.antlr.v4.runtime.Vocabulary
 import org.antlr.v4.runtime.atn.*
 
-fun ATNState.describe() : String = when(this) {
+fun ATNState.describe() : String = "[${this.stateNumber}] " + when(this) {
     is RuleStartState -> "rule start (stop -> ${this.stopState}) ${if (this.isLeftRecursiveRule) "leftRec " else ""}(ruleIndex=${this.ruleIndex})"
     is RuleStopState -> "rule stop (ruleIndex=${this.ruleIndex})"
     is BasicState -> "basic"
@@ -25,7 +25,7 @@ fun Transition.describe(ruleNames: Array<String>, vocabulary: Vocabulary) : Stri
     is ActionTransition -> "action"
     is PrecedencePredicateTransition -> "precedence predicate ${this.precedence}"
     else -> "UNKNOWN ${this.javaClass.simpleName}"
-}
+} + " to [${this.target}]"
 
 fun printAtn(atn: ATN, ruleNames: Array<String>, vocabulary: Vocabulary) {
     atn.states.forEach { s ->

@@ -102,7 +102,15 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary, val 
                     return Pair(false, this)
                 }
             }
-            is BasicState,is StarLoopbackState, is PlusLoopbackState -> return Pair(true, this)
+            is StarLoopbackState -> {
+                val cont = states.last() is StarLoopEntryState && (states.last() as StarLoopEntryState).loopBackState == state
+                if (cont) {
+                    return Pair(true, ParserStack(ruleNames, vocabulary, states.minusLast()))
+                } else {
+                    return Pair(false, this)
+                }
+            }
+            is BasicState,is StarLoopbackState, is PlusLoopbackState/*, is StarLoopEntryState*/ -> return Pair(true, this)
             else -> throw UnsupportedOperationException("Unsupported state: ${state.javaClass.canonicalName}")
         }
     }
