@@ -140,11 +140,9 @@ fun createCompletionProvider(languageSupport: LanguageSupport): CompletionProvid
         override fun getCompletionsImpl(comp: JTextComponent): MutableList<Completion>? {
             val retVal = ArrayList<Completion>()
             val code = beforeCaret(comp)
-            println("INVOKED")
+            //println("INVOKED")
             autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory)).forEach {
-                println("OPT A $it")
                 if (it.type != -1) {
-                    println("OPT B $it")
                     var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(it.type)
                     if (proposition != null) {
                         if (proposition.startsWith("'") && proposition.endsWith("'")) {

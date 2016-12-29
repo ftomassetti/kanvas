@@ -13,6 +13,7 @@ fun ATNState.describe() : String = when(this) {
     is BlockEndState -> "block end (start ${this.startState})"
     is PlusLoopbackState -> "plus loopback"
     is LoopEndState -> "loop end (loopback ${this.loopBackState})"
+    is TokensStartState -> "tokens start state ${this.stateNumber} ruleIndex=${this.ruleIndex}"
     else -> "UNKNOWN ${this.javaClass.simpleName}"
 }
 

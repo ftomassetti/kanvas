@@ -39,7 +39,7 @@ class AntlrAutoCompletionSuggester(val ruleNames: Array<String>, val vocabulary:
 
     override fun suggestions(editorContext: EditorContext): Set<TokenType> {
         val collector = Collector()
-        process(ruleNames, vocabulary, atn.states[0], MyTokenStream(editorContext.preceedingTokens()), collector, ParserStack())
+        process(ruleNames, vocabulary, atn.states[0], MyTokenStream(editorContext.preceedingTokens()), collector, ParserStack(ruleNames, vocabulary))
         return collector.collected()
     }
 
@@ -73,15 +73,15 @@ private fun describe(ruleNames: Array<String>, vocabulary: Vocabulary, s: ATNSta
 
 fun <E> List<out E>.minusLast() : List<E> = this.subList(0, this.size - 1)
 
-class ParserStack(val states : List<ATNState> = emptyList()) {
+class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary, val states : List<ATNState> = emptyList()) {
     fun process(state: ATNState) : Pair<Boolean, ParserStack> {
         return when (state) {
-            is RuleStartState, is StarBlockStartState,  is BasicBlockStartState, is PlusBlockStartState, is StarLoopEntryState -> {
-                return Pair(true, ParserStack(states.plus(state)))
+            is RuleStartState, is StarBlockStartState, is BasicBlockStartState, is PlusBlockStartState, is StarLoopEntryState -> {
+                return Pair(true, ParserStack(ruleNames, vocabulary, states.plus(state)))
             }
             is BlockEndState -> {
                 if (states.last() == state.startState) {
-                    return Pair(true, ParserStack(states.minusLast()))
+                    return Pair(true, ParserStack(ruleNames, vocabulary, states.minusLast()))
                 } else {
                     return Pair(false, this)
                 }
@@ -89,7 +89,7 @@ class ParserStack(val states : List<ATNState> = emptyList()) {
             is LoopEndState -> {
                 val cont = states.last() is StarLoopEntryState && (states.last() as StarLoopEntryState).loopBackState == state.loopBackState
                 if (cont) {
-                    return Pair(true, ParserStack(states.minusLast()))
+                    return Pair(true, ParserStack(ruleNames, vocabulary, states.minusLast()))
                 } else {
                     return Pair(false, this)
                 }
@@ -97,18 +97,28 @@ class ParserStack(val states : List<ATNState> = emptyList()) {
             is RuleStopState -> {
                 val cont = states.last() is RuleStartState && (states.last() as RuleStartState).stopState == state
                 if (cont) {
-                    return Pair(true, ParserStack(states.minusLast()))
+                    return Pair(true, ParserStack(ruleNames, vocabulary, states.minusLast()))
                 } else {
                     return Pair(false, this)
                 }
             }
             is BasicState, is BlockEndState,is StarLoopbackState, is PlusLoopbackState -> return Pair(true, this)
+            /*// TODO to be verified
+            is TokensStartState -> {
+                println("FIND TOKEN START STATE $state with stack $states")
+                println("  transitions=${state.transitions.map { it.describe(ruleNames, vocabulary) }}")
+                println("  ruleIndex=${state.ruleIndex}")
+                return Pair(true, ParserStack(ruleNames, vocabulary, states.plus(state)))
+            }*/
             else -> throw UnsupportedOperationException(state.javaClass.canonicalName)
         }
     }
+
+    fun describe() = "[${states.map { it.describe() }.joinToString(separator = ", ")}]"
 }
 
 private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Boolean {
+    //println("isCompatibleWithStack state=${state.describe()} parserStack=${parserStack.describe()}")
     val res = parserStack.process(state)
     if (!res.first) {
         return false
@@ -166,6 +176,15 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     }
                 }
             }
+            /*it is WildcardTransition -> {
+                if (atCaret) {
+                    if (isCompatibleWithStack(it.target, parserStack)) {
+                        //
+                    }
+                } else {
+                    process(ruleNames, vocabulary, it.target, tokens.move(), collector, stackRes.second, HashSet<Int>(), history.plus(desc))
+                }
+            }*/
             else -> throw UnsupportedOperationException(it.javaClass.canonicalName)
         }
     }
