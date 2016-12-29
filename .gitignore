@@ -6,3 +6,4 @@ generated-src
 out
 *.ipr
 *.iws
+lib

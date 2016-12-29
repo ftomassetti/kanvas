@@ -1,5 +1,5 @@
 buildscript {
-   ext.kotlin_version = '1.0.3'
+   ext.kotlin_version = '1.0.6'
 
    repositories {
      mavenCentral()
@@ -20,6 +20,10 @@ apply plugin: 'application'
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'antlr'
+apply plugin: 'maven'
+
+project.group   = "me.tomassetti"
+project.version = "0.1"
 
 repositories {
   mavenLocal()
@@ -61,6 +65,17 @@ clean{
 idea {
     module {
         sourceDirs += file("generated-src/antlr/main")
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'generated-src/antlr/main'
+        }
+        kotlin {
+            srcDirs 'src/main/kotlin'
+        }
     }
 }
 
