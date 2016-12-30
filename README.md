@@ -7,4 +7,4 @@ This is a very simple editor built in Kotlin. It offers syntax highlighting for 
 ## Documentation
 
 This post describe how syntax highlighting was implemented:
-* [post on syntax-highlight using an ANTLR lexer](http://tomassetti.me/how-to-create-an-editor-with-syntax-highlight-for-your-language/)
+* [post on syntax-highlight using an ANTLR lexer](https://tomassetti.me/how-to-create-an-editor-with-syntax-highlighting-dsl/)
