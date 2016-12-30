@@ -18,11 +18,13 @@ interface EditorContext {
     fun preceedingTokens() : List<Token>
 }
 
+data class AutoCompletionContext(val preecedingTokens: List<Token>, val proposals: Set<TokenType>)
+
 /**
  * The goal of this is to find the type of tokens that can be used in a given context
  */
 interface AutoCompletionSuggester {
-    fun suggestions(editorContext: EditorContext) : Set<TokenType>
+    fun suggestions(editorContext: EditorContext) : AutoCompletionContext
 }
 
 data class TokenTypeImpl(override val type: Int) : TokenType {
@@ -37,10 +39,11 @@ class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFacto
 
 class AntlrAutoCompletionSuggester(val ruleNames: Array<String>, val vocabulary: Vocabulary, val atn: ATN) : AutoCompletionSuggester {
 
-    override fun suggestions(editorContext: EditorContext): Set<TokenType> {
+    override fun suggestions(editorContext: EditorContext): AutoCompletionContext {
+        val preceedingTokens = editorContext.preceedingTokens()
         val collector = Collector()
-        process(ruleNames, vocabulary, atn.states[0], MyTokenStream(editorContext.preceedingTokens()), collector, ParserStack(ruleNames, vocabulary))
-        return collector.collected()
+        process(ruleNames, vocabulary, atn.states[0], MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary))
+        return AutoCompletionContext(preceedingTokens, collector.collected())
     }
 
 }

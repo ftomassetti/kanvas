@@ -153,9 +153,10 @@ fun createCompletionProvider(languageSupport: LanguageSupport): CompletionProvid
         override fun getCompletionsImpl(comp: JTextComponent): MutableList<Completion>? {
             val retVal = ArrayList<Completion>()
             val code = beforeCaret(comp)
-            autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory)).forEach {
+            val autoCompletionContext = autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory))
+            autoCompletionContext.proposals.forEach {
                 if (it.type != -1) {
-                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this, it.type))
+                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this, autoCompletionContext.preecedingTokens, it.type))
                 }
             }
 

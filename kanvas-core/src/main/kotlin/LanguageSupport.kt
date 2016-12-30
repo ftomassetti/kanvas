@@ -3,6 +3,7 @@ package me.tomassetti.kanvas
 import me.tomassetti.antlr.None
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.Lexer
+import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.Vocabulary
 import org.antlr.v4.runtime.atn.ATN
 import org.fife.ui.autocomplete.BasicCompletion
@@ -24,11 +25,11 @@ interface LanguageSupport {
 }
 
 interface PropositionProvider {
-    fun fromTokenType(completionProvider: CompletionProvider, tokenType: Int) : List<Completion>
+    fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>, tokenType: Int) : List<Completion>
 }
 
 class DefaultLanguageSupport(val languageSupport: LanguageSupport) : PropositionProvider {
-    override fun fromTokenType(completionProvider: CompletionProvider, tokenType: Int): List<Completion> {
+    override fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>, tokenType: Int): List<Completion> {
         val res = LinkedList<Completion>()
         var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(tokenType)
         if (proposition != null) {
