@@ -17,11 +17,23 @@ import java.util.*
 
 data class ParserData(val ruleNames: Array<String>, val vocabulary: Vocabulary, val atn: ATN)
 
+enum class IssueType {
+    WARNING,
+    ERROR
+}
+
+data class Issue(val type : IssueType, val message: String, val line: Int, val offset: Int, val length: Int)
+
+interface Validator {
+    fun validate(code: String) : List<Issue>
+}
+
 interface LanguageSupport {
     val syntaxScheme : SyntaxScheme
     val antlrLexerFactory: AntlrLexerFactory
     val parserData: ParserData?
     val propositionProvider: PropositionProvider
+    val validator: Validator
 }
 
 interface PropositionProvider {
@@ -42,22 +54,30 @@ class DefaultLanguageSupport(val languageSupport: LanguageSupport) : Proposition
     }
 }
 
+class EverythingOkValidator : Validator {
+    override fun validate(code: String): List<Issue> = emptyList()
+}
+
 abstract class BaseLanguageSupport : LanguageSupport {
 
     override val propositionProvider: PropositionProvider
         get() = DefaultLanguageSupport(this)
+    override val syntaxScheme: SyntaxScheme
+        get() = DefaultSyntaxScheme()
+    override val validator: Validator
+        get() = EverythingOkValidator()
+}
+
+class DefaultSyntaxScheme : SyntaxScheme(false) {
+    override fun getStyle(index: Int): Style {
+        val style = Style()
+        style.foreground = Color.WHITE
+        return style
+    }
 }
 
 object noneLanguageSupport : BaseLanguageSupport() {
 
-    override val syntaxScheme: SyntaxScheme
-        get() = object : SyntaxScheme(false) {
-            override fun getStyle(index: Int): Style {
-                val style = Style()
-                style.foreground = Color.WHITE
-                return style
-            }
-        }
     override val antlrLexerFactory: AntlrLexerFactory
         get() = object : AntlrLexerFactory {
             override fun create(code: String): Lexer = None(ANTLRInputStream(code))

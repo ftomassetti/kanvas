@@ -3,6 +3,7 @@ package me.tomassetti.kanvas
 import org.fife.ui.autocomplete.*
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+import org.fife.ui.rsyntaxtextarea.parser.*
 import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.*
 import java.io.File
@@ -51,6 +52,25 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
     textArea.background = BACKGROUND
     textArea.foreground = Color.WHITE
     textArea.currentLineHighlightColor = BACKGROUND_SUBTLE_HIGHLIGHT
+    textArea.addParser(object : Parser {
+
+        override fun getHyperlinkListener(): ExtendedHyperlinkListener {
+            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun getImageBase(): URL {
+            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun parse(doc: RSyntaxDocument, style: String): ParseResult {
+            val issues = languageSupport.validator.validate(doc.getText(0, doc.length))
+            val parseResult =  DefaultParseResult(this)
+            issues.forEach { parseResult.addNotice(DefaultParserNotice(this, it.message, it.line, it.offset, it.length)) }
+            return parseResult
+        }
+
+        override fun isEnabled(): Boolean = true
+    })
     val textPanel = TextPanel(textArea, file)
 
     val provider = createCompletionProvider(languageSupport)
