@@ -17,6 +17,7 @@ generateGrammarSource {
     outputDirectory = new File("generated-src/antlr/main/me/tomassetti/antlr".toString())
 }
 compileJava.dependsOn generateGrammarSource
+compileKotlin.dependsOn generateGrammarSource
 sourceSets {
     generated {
         java.srcDir 'generated-src/antlr/main/'
