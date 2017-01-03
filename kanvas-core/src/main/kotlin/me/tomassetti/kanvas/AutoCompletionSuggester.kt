@@ -1,6 +1,6 @@
 package me.tomassetti.kanvas
 
-import describe
+import me.tomassetti.kanvas.describe
 import org.antlr.v4.runtime.CommonToken
 import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.Token
@@ -122,7 +122,7 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary, val 
 }
 
 private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Boolean {
-    //println("isCompatibleWithStack state=${state.describe()} parserStack=${parserStack.describe()}")
+    //println("isCompatibleWithStack state=${state.me.tomassetti.kanvas.describe()} parserStack=${parserStack.me.tomassetti.kanvas.describe()}")
     val res = parserStack.process(state)
     if (!res.first) {
         return false
@@ -171,7 +171,7 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
     state.transitions.forEach {
         val desc = describe(ruleNames, vocabulary, state, it)
         //if (atCaret) {
-        //    println("Meeting caret: $desc \n\ttransition: ${it.describe(ruleNames, vocabulary)}\n\tparserStack:${parserStack.describe()}")
+        //    println("Meeting caret: $desc \n\ttransition: ${it.me.tomassetti.kanvas.describe(ruleNames, vocabulary)}\n\tparserStack:${parserStack.me.tomassetti.kanvas.describe()}")
         //}
         when {
             it.isEpsilon -> {
