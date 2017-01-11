@@ -219,7 +219,6 @@ class MyTabbedPane : JTabbedPane() {
 
 }
 
-
 //
 // Commands
 //
@@ -262,7 +261,7 @@ private fun closeCommand(tabbedPane : MyTabbedPane) {
 // Public API
 //
 
-class Kanvas {
+open class Kanvas {
 
     val APP_TITLE = "Kanvas"
 
@@ -302,23 +301,7 @@ class Kanvas {
         return img
     }
 
-    fun createAndShowKanvasGUI() {
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-
-        val xToolkit = Toolkit.getDefaultToolkit()
-        val awtAppClassNameField = xToolkit.javaClass.getDeclaredField("awtAppClassName")
-        awtAppClassNameField.isAccessible = true
-        awtAppClassNameField.set(xToolkit, APP_TITLE)
-
-        val frame = JFrame(APP_TITLE)
-        frame.iconImage = createKanvasIcon()
-        frame.background = BACKGROUND_DARKER
-        frame.contentPane.background = BACKGROUND_DARKER
-        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-
-        frame.contentPane.add(tabbedPane)
-
-        val menuBar = JMenuBar()
+    protected fun populateMenu(menuBar : JMenuBar) {
         val fileMenu = JMenu("File")
         menuBar.add(fileMenu)
         val open = JMenuItem("Open")
@@ -336,6 +319,26 @@ class Kanvas {
         val close = JMenuItem("Close")
         close.addActionListener { closeCommand(tabbedPane) }
         fileMenu.add(close)
+    }
+
+    fun createAndShowKanvasGUI() {
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+
+        val xToolkit = Toolkit.getDefaultToolkit()
+        val awtAppClassNameField = xToolkit.javaClass.getDeclaredField("awtAppClassName")
+        awtAppClassNameField.isAccessible = true
+        awtAppClassNameField.set(xToolkit, APP_TITLE)
+
+        val frame = JFrame(APP_TITLE)
+        frame.iconImage = createKanvasIcon()
+        frame.background = BACKGROUND_DARKER
+        frame.contentPane.background = BACKGROUND_DARKER
+        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+
+        frame.contentPane.add(tabbedPane)
+
+        val menuBar = JMenuBar()
+        populateMenu(menuBar)
         frame.jMenuBar = menuBar
 
         frame.pack()
