@@ -62,8 +62,8 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
             throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        override fun getImageBase(): URL {
-            throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        override fun getImageBase(): URL? {
+            return null
         }
 
         override fun parse(doc: RSyntaxDocument, style: String): ParseResult {
