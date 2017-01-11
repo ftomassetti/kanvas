@@ -34,10 +34,14 @@ class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(t
         tabbedPane().removeTabAt(index())
     }
 
-    fun  changeLanguageSupport(languageSupport: LanguageSupport) {
+    fun changeLanguageSupport(languageSupport: LanguageSupport) {
         (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker(languageSupport.antlrLexerFactory))
         (textArea as RSyntaxTextArea).syntaxScheme = languageSupport.syntaxScheme
     }
+
+    val code : String
+        get() = textArea.document.getText(0, textArea.document.length)
+
 }
 
 private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialContenxt: String = "", file: File? = null) : TextPanel {
@@ -284,6 +288,12 @@ open class Kanvas {
         }
     }
 
+    private val currentTab : TextPanel?
+        get() = tabbedPane.selectedComponent as TextPanel
+
+    val currentCode : String?
+        get() = this.currentTab?.code
+
     private fun openCommand() {
         val fc = JFileChooser()
         val res = fc.showOpenDialog(tabbedPane)
@@ -301,7 +311,7 @@ open class Kanvas {
         return img
     }
 
-    protected fun populateMenu(menuBar : JMenuBar) {
+    open protected fun populateMenu(menuBar : JMenuBar) {
         val fileMenu = JMenu("File")
         menuBar.add(fileMenu)
         val open = JMenuItem("Open")
