@@ -10,7 +10,7 @@ It is very simple to customize it to handle a language defined using ANTLR.
 
 ## Documentation
 
-This post explains the philosophy behing Kanvas:
+This post explains the philosophy behind Kanvas:
 * [Kanvas: generating a simple IDE from your ANTLR grammar ](https://tomassetti.me/kanvas-generating-simple-ide-antlr-grammar/)
 
 This post describe how syntax highlighting was implemented:
