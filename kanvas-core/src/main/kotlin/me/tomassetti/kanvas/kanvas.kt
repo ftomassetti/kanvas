@@ -82,11 +82,15 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
     ac.install(textArea)
 
     textPanel.viewportBorder = BorderFactory.createEmptyBorder()
-    textPanel.verticalScrollBar.ui = object : SynthScrollBarUI() {
-        override fun configureScrollBarColors() {
-            super.configureScrollBarColors()
-        }
-    }
+//    try {
+//        textPanel.verticalScrollBar.ui = object : SynthScrollBarUI() {
+//            override fun configureScrollBarColors() {
+//                super.configureScrollBarColors()
+//            }
+//        }
+//    } catch (e: Exception) {
+//        System.err.println(e.message)
+//    }
     return textPanel
 }
 
@@ -334,10 +338,16 @@ open class Kanvas {
     fun createAndShowKanvasGUI() {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
 
-        val xToolkit = Toolkit.getDefaultToolkit()
-        val awtAppClassNameField = xToolkit.javaClass.getDeclaredField("awtAppClassName")
-        awtAppClassNameField.isAccessible = true
-        awtAppClassNameField.set(xToolkit, APP_TITLE)
+        try {
+            val xToolkit = Toolkit.getDefaultToolkit()
+            println("XTOOLKIT "+xToolkit)
+            val awtAppClassNameField = xToolkit.javaClass.getDeclaredField("awtAppClassName")
+            awtAppClassNameField.isAccessible = true
+            awtAppClassNameField.set(xToolkit, APP_TITLE)
+        } catch (e: Exception) {
+            // ignore
+            System.err.println(e.message)
+        }
 
         val frame = JFrame(APP_TITLE)
         frame.iconImage = createKanvasIcon()
