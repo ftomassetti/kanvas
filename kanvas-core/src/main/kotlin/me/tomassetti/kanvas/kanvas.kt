@@ -49,6 +49,8 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
 
     (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker(languageSupport.antlrLexerFactory))
 
+    val context = languageSupport.contextCreator.create()
+
     textArea.syntaxScheme = languageSupport.syntaxScheme
     textArea.text = initialContenxt
     textArea.isCodeFoldingEnabled = true
@@ -67,7 +69,7 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
         }
 
         override fun parse(doc: RSyntaxDocument, style: String): ParseResult {
-            val issues = languageSupport.validator.validate(doc.getText(0, doc.length))
+            val issues = languageSupport.validator.validate(doc.getText(0, doc.length), context)
             val parseResult =  DefaultParseResult(this)
             issues.forEach { parseResult.addNotice(DefaultParserNotice(this, it.message, it.line, it.offset, it.length)) }
             return parseResult
@@ -77,7 +79,7 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
     })
     val textPanel = TextPanel(textArea, file)
 
-    val provider = createCompletionProvider(languageSupport)
+    val provider = createCompletionProvider(languageSupport, context)
     val ac = AutoCompletion(provider)
     ac.install(textArea)
 
@@ -137,7 +139,7 @@ private abstract class AbstractCompletionProviderBase : CompletionProviderBase()
     }
 }
 
-fun createCompletionProvider(languageSupport: LanguageSupport): CompletionProvider {
+fun createCompletionProvider(languageSupport: LanguageSupport, context: Context): CompletionProvider {
     if (languageSupport.parserData == null) {
         return object : AbstractCompletionProviderBase() {
 
@@ -184,7 +186,7 @@ fun createCompletionProvider(languageSupport: LanguageSupport): CompletionProvid
             val autoCompletionContext = autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory))
             autoCompletionContext.proposals.forEach {
                 if (it.type != -1) {
-                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this, autoCompletionContext.preecedingTokens, it.type))
+                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this, autoCompletionContext.preecedingTokens, it.type, context))
                 }
             }
 

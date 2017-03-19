@@ -25,7 +25,28 @@ enum class IssueType {
 data class Issue(val type : IssueType, val message: String, val line: Int, val offset: Int, val length: Int)
 
 interface Validator {
-    fun validate(code: String) : List<Issue>
+    fun validate(code: String, context: Context) : List<Issue>
+}
+
+interface Context {
+    fun register(name: String, data: Object?)
+    fun get(name: String) : Object?
+}
+
+open class SimpleContext : Context {
+    val map = HashMap<String, Object?>()
+
+    override fun register(name: String, data: Object?) {
+        map[name] = data
+    }
+
+    override fun get(name: String): Object? {
+        return map[name]
+    }
+}
+
+interface ContextCreator {
+    fun create() : Context
 }
 
 interface LanguageSupport {
@@ -34,14 +55,15 @@ interface LanguageSupport {
     val parserData: ParserData?
     val propositionProvider: PropositionProvider
     val validator: Validator
+    val contextCreator: ContextCreator
 }
 
 interface PropositionProvider {
-    fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>, tokenType: Int) : List<Completion>
+    fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>, tokenType: Int, context: Context) : List<Completion>
 }
 
 class DefaultLanguageSupport(val languageSupport: LanguageSupport) : PropositionProvider {
-    override fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>, tokenType: Int): List<Completion> {
+    override fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>, tokenType: Int, context: Context): List<Completion> {
         val res = LinkedList<Completion>()
         var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(tokenType)
         if (proposition != null) {
@@ -55,7 +77,7 @@ class DefaultLanguageSupport(val languageSupport: LanguageSupport) : Proposition
 }
 
 class EverythingOkValidator : Validator {
-    override fun validate(code: String): List<Issue> = emptyList()
+    override fun validate(code: String, context: Context): List<Issue> = emptyList()
 }
 
 abstract class BaseLanguageSupport : LanguageSupport {
@@ -66,6 +88,10 @@ abstract class BaseLanguageSupport : LanguageSupport {
         get() = DefaultSyntaxScheme()
     override val validator: Validator
         get() = EverythingOkValidator()
+    override val contextCreator: ContextCreator
+        get() = object : ContextCreator {
+            override fun create(): Context = SimpleContext()
+        }
 }
 
 class DefaultSyntaxScheme : SyntaxScheme(false) {
