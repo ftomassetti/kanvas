@@ -236,7 +236,7 @@ private fun saveAsCommand(tabbedPane : MyTabbedPane) {
         return
     }
     val fc = JFileChooser()
-    val res = fc.showOpenDialog(tabbedPane)
+    val res = fc.showSaveDialog(tabbedPane)
     if (res == JFileChooser.APPROVE_OPTION) {
         (tabbedPane.selectedComponent as TextPanel).file = fc.selectedFile
         val languageSupport = languageSupportRegistry.languageSupportForFile(fc.selectedFile)
