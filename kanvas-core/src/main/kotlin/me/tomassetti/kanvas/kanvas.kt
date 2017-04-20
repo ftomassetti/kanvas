@@ -42,6 +42,10 @@ class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(t
     val code : String
         get() = textArea.document.getText(0, textArea.document.length)
 
+    fun setFontSize(fontSize: Float) {
+       textArea.font = textArea.font.deriveFont(fontSize)
+    }
+
 }
 
 private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialContenxt: String = "", file: File? = null) : TextPanel {
@@ -279,6 +283,10 @@ open class Kanvas {
             .deriveFont(24.0f)
 
     private val tabbedPane = MyTabbedPane()
+
+    fun setFontSize(fontSize: Float) {
+        currentTab?.setFontSize(fontSize)
+    }
 
     fun addTab(title: String, font: Font = defaultFont, initialContenxt: String = "",
                        languageSupport: LanguageSupport = noneLanguageSupport,
