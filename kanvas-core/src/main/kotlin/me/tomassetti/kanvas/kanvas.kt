@@ -12,8 +12,10 @@ import java.nio.charset.Charset
 import java.util.*
 import javax.swing.*
 import javax.swing.plaf.metal.MetalTabbedPaneUI
-import javax.swing.plaf.synth.SynthScrollBarUI
-import javax.swing.text.*
+import javax.swing.text.BadLocationException
+import javax.swing.text.Document
+import javax.swing.text.JTextComponent
+import javax.swing.text.Segment
 
 private val BACKGROUND = Color(39, 40, 34)
 private val BACKGROUND_SUBTLE_HIGHLIGHT = Color(49, 50, 44)
@@ -43,6 +45,7 @@ class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(t
         get() = textArea.document.getText(0, textArea.document.length)
 
     fun setFontSize(fontSize: Float) {
+       super.setFont(super.getFont().deriveFont(fontSize))
        textArea.font = textArea.font.deriveFont(fontSize)
     }
 
@@ -278,15 +281,18 @@ private fun closeCommand(tabbedPane : MyTabbedPane) {
 open class Kanvas {
 
     val APP_TITLE = "Kanvas"
+    val DEFAULT_FONT_SIZE = 24.0f
 
     val defaultFont: Font = Font.createFont(Font.TRUETYPE_FONT, Object().javaClass.getResourceAsStream("/CutiveMono-Regular.ttf"))
-            .deriveFont(24.0f)
+            .deriveFont(DEFAULT_FONT_SIZE)
 
     private val tabbedPane = MyTabbedPane()
 
-    fun setFontSize(fontSize: Float) {
-        currentTab?.setFontSize(fontSize)
-    }
+    var fontSize : Float = DEFAULT_FONT_SIZE
+        set(value) {
+            field = value
+            currentTab?.setFontSize(value)
+        }
 
     fun addTab(title: String, font: Font = defaultFont, initialContenxt: String = "",
                        languageSupport: LanguageSupport = noneLanguageSupport,
