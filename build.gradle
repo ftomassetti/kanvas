@@ -15,6 +15,12 @@ buildscript {
     }
 }
 
+def kanvasVersion = '0.1.0'
+
+task version << {
+    print "Version ${kanvasVersion}"
+}
+
 allprojects {
 
     apply plugin: 'kotlin'
@@ -23,12 +29,89 @@ allprojects {
     apply plugin: 'maven'
     apply plugin: 'idea'
 
+    group = 'me.tomassetti.kanvas'
+
     repositories {
         mavenLocal()
         mavenCentral()
         jcenter()
     }
 
-    project.group   = "me.tomassetti"
-    project.version = "0.1"
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+    }
+
+    task javadocJar(type: Jar) {
+        classifier = 'javadoc'
+        from javadoc
+    }
+
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    if (JavaVersion.current().isJava8Compatible()) {
+        allprojects {
+            tasks.withType(Javadoc) {
+                options.addStringOption('Xdoclint:none', '-quiet')
+            }
+        }
+    }
+
+    artifacts {
+        archives javadocJar, sourcesJar
+    }
+
+    task generatePom << {
+        def generatedPom = pom {
+            project {
+                name project.name
+                description 'Kanvas is a framework to create flexible desktop editors'
+                version kanvasVersion
+                packaging 'jar'
+                url 'https://github.com/ftomassetti/kanvas'
+
+                scm {
+                    connection 'scm:git:https://github.com/ftomassetti/kanvas.git'
+                    developerConnection 'scm:git:git@github.com:ftomassetti/kanvas.git'
+                    url 'https://github.com/ftomassetti/kanvas.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The MIT License (MIT)'
+                        url 'http://opensource.org/licenses/MIT'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'ftomassetti'
+                        name = 'Federico Tomassetti'
+                        email = 'federico@tomassetti.me'
+                    }
+                }
+            }
+        }
+        generatedPom.writeTo("$buildDir/pom.xml")
+    }
+}
+
+task sign(type:Exec) {
+    doLast {
+        String home = System.getProperty("user.home")
+        String passphrase = new File(home + '/.gnupg/passphrase.txt').text
+        commandLine 'gpg2', '--passphrase', passphrase, '--batch', '--yes', '--no-tty', '-ab', 'java-symbol-solver-core/build/pom.xml'
+    }
 }
