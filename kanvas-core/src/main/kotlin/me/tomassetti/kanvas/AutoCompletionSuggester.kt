@@ -1,6 +1,5 @@
 package me.tomassetti.kanvas
 
-import me.tomassetti.kanvas.describe
 import org.antlr.v4.runtime.CommonToken
 import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.Token
@@ -37,13 +36,15 @@ class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFacto
     }
 }
 
-class AntlrAutoCompletionSuggester(val ruleNames: Array<String>, val vocabulary: Vocabulary, val atn: ATN) : AutoCompletionSuggester {
+class AntlrAutoCompletionSuggester(val ruleNames: Array<String>,
+                                   val vocabulary: Vocabulary, val atn: ATN) : AutoCompletionSuggester {
 
     override fun suggestions(editorContext: EditorContext): AutoCompletionContext {
         val preceedingTokens = editorContext.preceedingTokens()
         val collector = Collector()
-        process(ruleNames, vocabulary, atn.states[0], MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary))
-        return AutoCompletionContext(preceedingTokens, collector.collected())
+        process(ruleNames, vocabulary, atn.states[0],
+                MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary))
+        return AutoCompletionContext(preceedingTokens, collector.collected().map { it.first }.toSet())
     }
 
 }
@@ -52,7 +53,8 @@ fun String.toInputStream() = ByteArrayInputStream(this.toByteArray(StandardChars
 
 val CARET_TOKEN_TYPE = -10
 
-private class MyTokenStream(val tokens: List<Token>, val start: Int = 0) {
+// Visible for testing
+class MyTokenStream(val tokens: List<Token>, val start: Int = 0) {
     fun next() : Token {
         if (start >= tokens.size) {
             return CommonToken(-1)
@@ -64,22 +66,28 @@ private class MyTokenStream(val tokens: List<Token>, val start: Int = 0) {
     fun move() : MyTokenStream = MyTokenStream(tokens, start + 1)
 }
 
-private class Collector() {
-    private val collected = HashSet<TokenType>()
-    fun collect(type: Int) {
-        collected.add(TokenTypeImpl(type))
+// Visible for testing
+class Collector {
+    private val collected = HashSet<Pair<TokenType, ParserStack>>()
+    fun collect(type: Int, parserStack: ParserStack) {
+        collected.add(Pair(TokenTypeImpl(type), parserStack))
     }
-    fun collected() : Set<TokenType> = collected
+    fun collected() : Set<Pair<TokenType, ParserStack>> = collected
 }
 
-private fun describe(ruleNames: Array<String>, vocabulary: Vocabulary, s: ATNState, t: Transition) = "[${s.stateNumber}] ${s.describe()} TR ${t.describe(ruleNames, vocabulary)}"
+private fun describe(ruleNames: Array<String>, vocabulary: Vocabulary,
+                     s: ATNState, t: Transition) =
+        "[${s.stateNumber}] ${s.describe(ruleNames)} TR ${t.describe(ruleNames, vocabulary)}"
 
 fun <E> List<out E>.minusLast() : List<E> = this.subList(0, this.size - 1)
 
-class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary, val states : List<ATNState> = emptyList()) {
+class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary,
+                  val states : List<ATNState> = emptyList()) {
+
     fun process(state: ATNState) : Pair<Boolean, ParserStack> {
         return when (state) {
-            is RuleStartState, is StarBlockStartState, is BasicBlockStartState, is PlusBlockStartState, is StarLoopEntryState -> {
+            is RuleStartState, is StarBlockStartState, is BasicBlockStartState,
+            is PlusBlockStartState, is StarLoopEntryState -> {
                 return Pair(true, ParserStack(ruleNames, vocabulary, states.plus(state)))
             }
             is BlockEndState -> {
@@ -90,7 +98,8 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary, val 
                 }
             }
             is LoopEndState -> {
-                val cont = states.last() is StarLoopEntryState && (states.last() as StarLoopEntryState).loopBackState == state.loopBackState
+                val cont = states.last() is StarLoopEntryState
+                        && (states.last() as StarLoopEntryState).loopBackState == state.loopBackState
                 if (cont) {
                     return Pair(true, ParserStack(ruleNames, vocabulary, states.minusLast()))
                 } else {
@@ -98,7 +107,8 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary, val 
                 }
             }
             is RuleStopState -> {
-                val cont = states.last() is RuleStartState && (states.last() as RuleStartState).stopState == state
+                val cont = states.last() is RuleStartState
+                        && (states.last() as RuleStartState).stopState == state
                 if (cont) {
                     return Pair(true, ParserStack(ruleNames, vocabulary, states.minusLast()))
                 } else {
@@ -106,7 +116,8 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary, val 
                 }
             }
             is StarLoopbackState -> {
-                val cont = states.last() is StarLoopEntryState && (states.last() as StarLoopEntryState).loopBackState == state
+                val cont = states.last() is StarLoopEntryState
+                        && (states.last() as StarLoopEntryState).loopBackState == state
                 if (cont) {
                     return Pair(true, ParserStack(ruleNames, vocabulary, states.minusLast()))
                 } else {
@@ -118,7 +129,7 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary, val 
         }
     }
 
-    fun describe() = "[${states.map { it.describe() }.joinToString(separator = ", ")}]"
+    fun describe() = "[${states.map { it.describe(ruleNames) }.joinToString(separator = ", ")}]"
 }
 
 private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Boolean {
@@ -136,12 +147,13 @@ private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Bo
 
 private val debugging = false
 
-private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
+// Visible for testing
+fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     state: ATNState, tokens: MyTokenStream, collector: Collector,
                     parserStack: ParserStack,
                     alreadyPassed: Set<Int> = HashSet<Int>(), history : List<String> = listOf("start")) {
     if (debugging) {
-        println("PROCESSING state=${state.describe()}")
+        println("PROCESSING state=${state.describe(ruleNames)}")
         println("\tparserStack=${parserStack.describe()}")
         println("\talreadyPassed=${alreadyPassed}")
         println("\thistory=${history.joinToString(", ")}")
@@ -185,7 +197,7 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                 val nextTokenType = tokens.next()
                 if (atCaret) {
                     if (isCompatibleWithStack(it.target, parserStack)) {
-                        collector.collect(it.label)
+                        collector.collect(it.label, parserStack)
                     } else if (debugging) {
                         println("\tNOT COMPATIBLE")
                     }
@@ -200,7 +212,7 @@ private fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                 it.label().toList().forEach { sym ->
                     if (atCaret) {
                         if (isCompatibleWithStack(it.target, parserStack)) {
-                            collector.collect(sym)
+                            collector.collect(sym, parserStack)
                         } else if (debugging) {
                             println("\tNOT COMPATIBLE")
                         }

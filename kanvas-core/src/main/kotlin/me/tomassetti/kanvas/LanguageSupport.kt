@@ -22,7 +22,8 @@ enum class IssueType {
     ERROR
 }
 
-data class Issue(val type : IssueType, val message: String, val line: Int, val offset: Int, val length: Int)
+data class Issue(val type : IssueType, val message: String,
+                 val line: Int, val offset: Int, val length: Int)
 
 interface Validator {
     fun validate(code: String, context: Context) : List<Issue>
@@ -59,11 +60,13 @@ interface LanguageSupport {
 }
 
 interface PropositionProvider {
-    fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>, tokenType: Int, context: Context) : List<Completion>
+    fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>,
+                      tokenType: Int, context: Context) : List<Completion>
 }
 
 class DefaultLanguageSupport(val languageSupport: LanguageSupport) : PropositionProvider {
-    override fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>, tokenType: Int, context: Context): List<Completion> {
+    override fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>,
+                               tokenType: Int, context: Context): List<Completion> {
         val res = LinkedList<Completion>()
         var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(tokenType)
         if (proposition != null) {
@@ -123,6 +126,8 @@ object languageSupportRegistry {
     fun register(extension : String, languageSupport: LanguageSupport) {
         extensionsMap[extension] = languageSupport
     }
-    fun languageSupportForExtension(extension : String) : LanguageSupport = extensionsMap.getOrDefault(extension, noneLanguageSupport)
-    fun languageSupportForFile(file : File) : LanguageSupport = languageSupportForExtension(file.extension)
+    fun languageSupportForExtension(extension : String) : LanguageSupport
+            = extensionsMap.getOrDefault(extension, noneLanguageSupport)
+    fun languageSupportForFile(file : File) : LanguageSupport
+            = languageSupportForExtension(file.extension)
 }

@@ -19,14 +19,27 @@ generateGrammarSource {
     arguments += ['-package', 'me.tomassetti.antlr']
     outputDirectory = new File("generated-src/antlr/main/me/tomassetti/antlr".toString())
 }
+
+generateTestGrammarSource {
+    maxHeapSize = "64m"
+    arguments += ['-package', 'me.tomassetti.antlr']
+    outputDirectory = new File("generated-src/antlr/test/me/tomassetti/antlr".toString())
+}
+
 compileJava.dependsOn generateGrammarSource
 compileKotlin.dependsOn generateGrammarSource
+compileTestJava.dependsOn generateTestGrammarSource
+compileTestKotlin.dependsOn generateTestGrammarSource
 sourceSets {
     generated {
         java.srcDir 'generated-src/antlr/main/'
     }
+    testGenerated {
+        java.srcDir 'generated-src/antlr/test/'  
+    }
 }
 compileJava.source sourceSets.generated.java, sourceSets.main.java
+compileTestJava.source sourceSets.testGenerated.java, sourceSets.test.java
 
 clean{
     delete "generated-src"
@@ -35,6 +48,7 @@ clean{
 idea {
     module {
         sourceDirs += file("generated-src/antlr/main")
+        testSourceDirs += file("generated-src/antlr/test")        
     }
 }
 
@@ -47,5 +61,12 @@ sourceSets {
             srcDirs 'src/main/kotlin'
         }
     }
+    test {
+        java {
+            srcDirs 'generated-src/antlr/test'
+        }
+        kotlin {
+            srcDirs 'src/test/kotlin'
+        }   
+    }
 }
-
