@@ -145,13 +145,13 @@ private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Bo
     }
 }
 
-private val debugging = false
-
 // Visible for testing
 fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     state: ATNState, tokens: MyTokenStream, collector: Collector,
                     parserStack: ParserStack,
-                    alreadyPassed: Set<Int> = HashSet<Int>(), history : List<String> = listOf("start")) {
+                    alreadyPassed: Set<Int> = HashSet<Int>(),
+                    history : List<String> = listOf("start"),
+                    debugging : Boolean = true) {
     if (debugging) {
         println("PROCESSING state=${state.describe(ruleNames)}")
         println("\tparserStack=${parserStack.describe()}")
@@ -241,3 +241,4 @@ fun Lexer.toList() : List<Token> {
     } while (next.type >= 0)
     return res
 }
+

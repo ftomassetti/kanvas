@@ -1,7 +1,11 @@
 package me.tomassetti.kanvas
 
+import javassist.ClassPool
+import javassist.NotFoundException
+import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Vocabulary
 import org.antlr.v4.runtime.atn.*
+import java.util.*
 
 private fun describeRule(ruleIndex: Int, ruleNames: Array<String>?)
     = if (ruleNames == null) "ruleIndex=$ruleIndex" else "ruleName=${ruleNames[ruleIndex]}"
@@ -39,4 +43,38 @@ fun printAtn(atn: ATN, ruleNames: Array<String>, vocabulary: Vocabulary) {
             println("  ${t.describe(ruleNames, vocabulary)} -> [${t.target.stateNumber}] ${t.target.describe(ruleNames)}")
         }
     }
+}
+
+private fun String.toRuleName(parserClass: Class<*>) = this.removePrefix(parserClass.simpleName + "$").removeSuffix("Context")
+
+/**
+ * Find the subrules: a map that list by the superrule the list of descending subrules, in order
+ */
+fun subRules(parserClass: Class<*>): Map<String, MutableList<String>> {
+    val pool = ClassPool.getDefault()
+    val rulesByLine = HashMap<String, Int>()
+    val subRules = HashMap<String, MutableList<String>>()
+    parserClass.classes.forEach { nestedClass ->
+        if (!nestedClass.superclass.name.equals(ParserRuleContext::class.java.canonicalName)
+                && !nestedClass.superclass.name.equals(Any::class.java.canonicalName)) {
+            val superRule = nestedClass.superclass.simpleName.toRuleName(parserClass)
+            val subRule = nestedClass.simpleName.toRuleName(parserClass)
+            if (!subRules.containsKey(superRule)) {
+                subRules[superRule] = LinkedList<String>()
+            }
+            subRules[superRule]!!.add(subRule)
+        }
+        try {
+            val cc = pool.get(parserClass.canonicalName + "$${nestedClass.simpleName}")
+            val name = cc.simpleName.toRuleName(parserClass)
+            rulesByLine[name] = cc.constructors.first().methodInfo2.getLineNumber(0)
+        } catch (e: NotFoundException) {
+            // skip
+        }
+    }
+    subRules.forEach { superRule, subRules ->
+        Collections.sort(subRules, { a, b ->
+            rulesByLine[a]!! - rulesByLine[b]!! })
+    }
+    return subRules
 }

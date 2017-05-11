@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.Lexer
 import kotlin.test.assertEquals
 import org.junit.Test as test
 
+
 class AutoCompletionSuggesterTest {
 
     private val antlrLexerFactory = object : AntlrLexerFactory {
@@ -63,5 +64,10 @@ class AutoCompletionSuggesterTest {
         assertEquals(1, collected.size)
         assertEquals(StaMacLexer.ID, collected.first().first.type)
         println(collected.first().second.describe())
+    }
+
+    @test fun reflectionAnalysis() {
+        val subrules = subRules(StaMacParser::class.java)
+        println(subrules)
     }
 }
