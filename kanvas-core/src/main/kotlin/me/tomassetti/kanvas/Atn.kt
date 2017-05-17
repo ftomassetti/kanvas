@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.atn.*
 import java.util.*
 
 private fun describeRule(ruleIndex: Int, ruleNames: Array<String>?)
-    = if (ruleNames == null) "ruleIndex=$ruleIndex" else "ruleName=${ruleNames[ruleIndex]}"
+    = if (ruleNames == null || ruleIndex == -1) "ruleIndex=$ruleIndex" else "ruleName=${ruleNames[ruleIndex]}"
 
 fun ATNState.describe(ruleNames: Array<String>? = null) : String = "[${this.stateNumber}] " + when(this) {
     is RuleStartState -> "rule start (stop -> ${this.stopState}) ${if (this.isLeftRecursiveRule) "leftRec " else ""}(${describeRule(this.ruleIndex, ruleNames)})"
