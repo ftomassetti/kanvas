@@ -207,7 +207,11 @@ fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Conte
                     EditorContextImpl(code, languageSupport.antlrLexerFactory, textPanel))
             autoCompletionContext.proposals.forEach {
                 if (it.first.type != -1) {
-                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this, autoCompletionContext.preecedingTokens, it.first.type, context))
+                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this,
+                            AutocompletionSurroundingInformation(
+                                    textPanel.cachedRoot,
+                                    autoCompletionContext.preecedingTokens,
+                                    it.second.rulesStack()), it.first.type, context))
                 }
             }
 

@@ -30,6 +30,7 @@ allprojects {
     apply plugin: 'idea'
 
     group = 'me.tomassetti.kanvas'
+    version = kanvasVersion
 
     repositories {
         mavenLocal()

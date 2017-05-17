@@ -64,13 +64,22 @@ interface LanguageSupport<RootNode: Node> {
     val parser: Parser<RootNode>
 }
 
+/**
+ * Information provided to contextualize autocompletion
+ */
+data class AutocompletionSurroundingInformation(val cachedAstRoot: Node?,
+                                  val preecedingTokens: List<Token>,
+                                  val rulesStack: List<String>)
+
 interface PropositionProvider {
-    fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>,
+    fun fromTokenType(completionProvider: CompletionProvider,
+                      autocompletionSurroundingInformation: AutocompletionSurroundingInformation,
                       tokenType: Int, context: Context) : List<Completion>
 }
 
 class DefaultLanguageSupport(val languageSupport: LanguageSupport<*>) : PropositionProvider {
-    override fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>,
+    override fun fromTokenType(completionProvider: CompletionProvider,
+                               autocompletionSurroundingInformation: AutocompletionSurroundingInformation,
                                tokenType: Int, context: Context): List<Completion> {
         val res = LinkedList<Completion>()
         var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(tokenType)
@@ -111,14 +120,9 @@ class DefaultSyntaxScheme : SyntaxScheme(false) {
 }
 
 class DummyParser : Parser<Node> {
-    override fun parse(inputStream: InputStream, withValidation: Boolean) {
+    override fun parse(inputStream: InputStream, withValidation: Boolean): ParsingResult<Node> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
-    override fun parse(code: String): ParsingResult<Node> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
 }
 
 object noneLanguageSupport : BaseLanguageSupport<Node>() {
