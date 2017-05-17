@@ -1,5 +1,6 @@
 package me.tomassetti.kanvas
 
+import me.tomassetti.kolasu.model.Node
 import org.fife.ui.autocomplete.*
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
@@ -36,7 +37,7 @@ class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(t
         tabbedPane().removeTabAt(index())
     }
 
-    fun changeLanguageSupport(languageSupport: LanguageSupport) {
+    fun changeLanguageSupport(languageSupport: LanguageSupport<*>) {
         (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker(languageSupport.antlrLexerFactory))
         (textArea as RSyntaxTextArea).syntaxScheme = languageSupport.syntaxScheme
     }
@@ -51,7 +52,7 @@ class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(t
 
 }
 
-private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialContenxt: String = "", file: File? = null) : TextPanel {
+private fun <RootNode:Node> makeTextPanel(font: Font, languageSupport: LanguageSupport<RootNode>, initialContenxt: String = "", file: File? = null) : TextPanel {
     val textArea = RSyntaxTextArea(20, 60)
 
     (textArea.document as RSyntaxDocument).setSyntaxStyle(AntlrTokenMaker(languageSupport.antlrLexerFactory))
@@ -65,6 +66,7 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
     textArea.background = BACKGROUND
     textArea.foreground = Color.WHITE
     textArea.currentLineHighlightColor = BACKGROUND_SUBTLE_HIGHLIGHT
+    val textPanel = TextPanel(textArea, file)
     textArea.addParser(object : Parser {
 
         override fun getHyperlinkListener(): ExtendedHyperlinkListener {
@@ -76,15 +78,15 @@ private fun makeTextPanel(font: Font, languageSupport: LanguageSupport, initialC
         }
 
         override fun parse(doc: RSyntaxDocument, style: String): ParseResult {
-            val issues = languageSupport.validator.validate(doc.getText(0, doc.length), context)
-            val parseResult =  DefaultParseResult(this)
-            issues.forEach { parseResult.addNotice(DefaultParserNotice(this, it.message, it.line, it.offset, it.length)) }
-            return parseResult
+            val kolasuParseResult = languageSupport.parser.parse(doc.getText(0, doc.length))
+            val issues = languageSupport.validator.validate(kolasuParseResult, context)
+            val kanvasParseResult =  DefaultParseResult(this)
+            issues.forEach { kanvasParseResult.addNotice(DefaultParserNotice(this, it.message, it.line, it.offset, it.length)) }
+            return kanvasParseResult
         }
 
         override fun isEnabled(): Boolean = true
     })
-    val textPanel = TextPanel(textArea, file)
 
     val provider = createCompletionProvider(languageSupport, context)
     val ac = AutoCompletion(provider)
@@ -146,7 +148,7 @@ private abstract class AbstractCompletionProviderBase : CompletionProviderBase()
     }
 }
 
-fun createCompletionProvider(languageSupport: LanguageSupport, context: Context): CompletionProvider {
+fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Context): CompletionProvider {
     if (languageSupport.parserData == null) {
         return object : AbstractCompletionProviderBase() {
 
@@ -192,8 +194,8 @@ fun createCompletionProvider(languageSupport: LanguageSupport, context: Context)
             val code = beforeCaret(comp)
             val autoCompletionContext = autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory))
             autoCompletionContext.proposals.forEach {
-                if (it.type != -1) {
-                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this, autoCompletionContext.preecedingTokens, it.type, context))
+                if (it.first.type != -1) {
+                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this, autoCompletionContext.preecedingTokens, it.first.type, context))
                 }
             }
 
@@ -295,7 +297,7 @@ open class Kanvas {
         }
 
     fun addTab(title: String, font: Font = defaultFont, initialContenxt: String = "",
-                       languageSupport: LanguageSupport = noneLanguageSupport,
+                       languageSupport: LanguageSupport<*> = noneLanguageSupport,
                        file: File? = null) {
         try {
             val panel = makeTextPanel(font, languageSupport, initialContenxt, file)
@@ -303,7 +305,7 @@ open class Kanvas {
             tabbedPane.setForegroundAt(tabbedPane.tabCount - 1, Color.white)
             tabbedPane.setBackgroundAt(tabbedPane.tabCount - 1, BACKGROUND_DARKER)
         } catch (e : Exception) {
-            JOptionPane.showMessageDialog(tabbedPane, "Error creating tab for language ${languageSupport}: ${e.message}")
+            JOptionPane.showMessageDialog(tabbedPane, "Error creating tab for language $languageSupport: ${e.message}")
             e.printStackTrace()
         }
     }

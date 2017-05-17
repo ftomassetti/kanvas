@@ -1,6 +1,9 @@
 package me.tomassetti.kanvas
 
 import me.tomassetti.antlr.None
+import me.tomassetti.kolasu.model.Node
+import me.tomassetti.kolasu.parsing.Parser
+import me.tomassetti.kolasu.parsing.ParsingResult
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.Token
@@ -13,6 +16,7 @@ import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme
 import java.awt.Color
 import java.io.File
+import java.io.InputStream
 import java.util.*
 
 data class ParserData(val ruleNames: Array<String>, val vocabulary: Vocabulary, val atn: ATN)
@@ -25,8 +29,8 @@ enum class IssueType {
 data class Issue(val type : IssueType, val message: String,
                  val line: Int, val offset: Int, val length: Int)
 
-interface Validator {
-    fun validate(code: String, context: Context) : List<Issue>
+interface Validator<RootNode: Node> {
+    fun validate(parsingResult: ParsingResult<RootNode>, context: Context) : List<Issue>
 }
 
 interface Context {
@@ -50,13 +54,14 @@ interface ContextCreator {
     fun create() : Context
 }
 
-interface LanguageSupport {
+interface LanguageSupport<RootNode: Node> {
     val syntaxScheme : SyntaxScheme
     val antlrLexerFactory: AntlrLexerFactory
     val parserData: ParserData?
     val propositionProvider: PropositionProvider
-    val validator: Validator
+    val validator: Validator<RootNode>
     val contextCreator: ContextCreator
+    val parser: Parser<RootNode>
 }
 
 interface PropositionProvider {
@@ -64,7 +69,7 @@ interface PropositionProvider {
                       tokenType: Int, context: Context) : List<Completion>
 }
 
-class DefaultLanguageSupport(val languageSupport: LanguageSupport) : PropositionProvider {
+class DefaultLanguageSupport(val languageSupport: LanguageSupport<*>) : PropositionProvider {
     override fun fromTokenType(completionProvider: CompletionProvider, preecedingTokens: List<Token>,
                                tokenType: Int, context: Context): List<Completion> {
         val res = LinkedList<Completion>()
@@ -79,17 +84,17 @@ class DefaultLanguageSupport(val languageSupport: LanguageSupport) : Proposition
     }
 }
 
-class EverythingOkValidator : Validator {
-    override fun validate(code: String, context: Context): List<Issue> = emptyList()
+class EverythingOkValidator<RootNode:Node> : Validator<RootNode> {
+    override fun validate(parsingResult: ParsingResult<RootNode>, context: Context): List<Issue> = emptyList()
 }
 
-abstract class BaseLanguageSupport : LanguageSupport {
+abstract class BaseLanguageSupport<RootNode:Node> : LanguageSupport<RootNode> {
 
     override val propositionProvider: PropositionProvider
         get() = DefaultLanguageSupport(this)
     override val syntaxScheme: SyntaxScheme
         get() = DefaultSyntaxScheme()
-    override val validator: Validator
+    override val validator: Validator<RootNode>
         get() = EverythingOkValidator()
     override val contextCreator: ContextCreator
         get() = object : ContextCreator {
@@ -105,7 +110,21 @@ class DefaultSyntaxScheme : SyntaxScheme(false) {
     }
 }
 
-object noneLanguageSupport : BaseLanguageSupport() {
+class DummyParser : Parser<Node> {
+    override fun parse(inputStream: InputStream, withValidation: Boolean) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun parse(code: String): ParsingResult<Node> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+}
+
+object noneLanguageSupport : BaseLanguageSupport<Node>() {
+
+    override val parser: Parser<Node>
+        get() = DummyParser()
 
     override val antlrLexerFactory: AntlrLexerFactory
         get() = object : AntlrLexerFactory {
@@ -121,13 +140,13 @@ object noneLanguageSupport : BaseLanguageSupport() {
 }
 
 object languageSupportRegistry {
-    private val extensionsMap = HashMap<String, LanguageSupport>()
+    private val extensionsMap = HashMap<String, LanguageSupport<*>>()
 
-    fun register(extension : String, languageSupport: LanguageSupport) {
+    fun register(extension : String, languageSupport: LanguageSupport<*>) {
         extensionsMap[extension] = languageSupport
     }
-    fun languageSupportForExtension(extension : String) : LanguageSupport
+    fun languageSupportForExtension(extension : String) : LanguageSupport<*>
             = extensionsMap.getOrDefault(extension, noneLanguageSupport)
-    fun languageSupportForFile(file : File) : LanguageSupport
+    fun languageSupportForFile(file : File) : LanguageSupport<*>
             = languageSupportForExtension(file.extension)
 }

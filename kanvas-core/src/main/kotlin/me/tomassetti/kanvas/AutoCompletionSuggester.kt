@@ -17,7 +17,7 @@ interface EditorContext {
     fun preceedingTokens() : List<Token>
 }
 
-data class AutoCompletionContext(val preecedingTokens: List<Token>, val proposals: Set<TokenType>)
+data class AutoCompletionContext(val preecedingTokens: List<Token>, val proposals: Set<Pair<TokenType, ParserStack>>)
 
 /**
  * The goal of this is to find the type of tokens that can be used in a given context
@@ -44,7 +44,7 @@ class AntlrAutoCompletionSuggester(val ruleNames: Array<String>,
         val collector = Collector()
         process(ruleNames, vocabulary, atn.states[0],
                 MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary))
-        return AutoCompletionContext(preceedingTokens, collector.collected().map { it.first }.toSet())
+        return AutoCompletionContext(preceedingTokens, collector.collected())
     }
 
 }
