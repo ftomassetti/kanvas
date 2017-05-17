@@ -28,9 +28,12 @@ allprojects {
     apply plugin: 'antlr'
     apply plugin: 'maven'
     apply plugin: 'idea'
+    //apply plugin: 'distribution'
+
+    //distTar.enabled = false
 
     group = 'me.tomassetti.kanvas'
-    version = kanvasVersion
+    version = kanvasVersion    
 
     repositories {
         mavenLocal()
@@ -41,15 +44,8 @@ allprojects {
 }
 
 subprojects {
-    apply plugin: 'java'
-    apply plugin: 'maven'
-
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
-
-    repositories {
-        mavenCentral()
-    }
 
     task javadocJar(type: Jar) {
         classifier = 'javadoc'
