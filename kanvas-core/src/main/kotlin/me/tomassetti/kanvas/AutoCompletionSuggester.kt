@@ -1,5 +1,6 @@
 package me.tomassetti.kanvas
 
+import me.tomassetti.kolasu.model.Node
 import org.antlr.v4.runtime.CommonToken
 import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.Token
@@ -15,9 +16,12 @@ interface TokenType {
 
 interface EditorContext {
     fun preceedingTokens() : List<Token>
+    fun cachedAst() : Node?
 }
 
-data class AutoCompletionContext(val preecedingTokens: List<Token>, val proposals: Set<Pair<TokenType, ParserStack>>)
+data class AutoCompletionContext(val preecedingTokens: List<Token>,
+                                 val proposals: Set<Pair<TokenType, ParserStack>>,
+                                 val cachedAst: Node?)
 
 /**
  * The goal of this is to find the type of tokens that can be used in a given context
@@ -29,7 +33,11 @@ interface AutoCompletionSuggester {
 data class TokenTypeImpl(override val type: Int) : TokenType {
 }
 
-class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFactory) : EditorContext {
+class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFactory, val textPanel: TextPanel) : EditorContext {
+    override fun cachedAst(): Node? {
+        return textPanel.cachedRoot
+    }
+
     override fun preceedingTokens(): List<Token> {
         val lexer = antlrLexerFactory.create(code)
         return lexer.toList()
@@ -44,7 +52,7 @@ class AntlrAutoCompletionSuggester(val ruleNames: Array<String>,
         val collector = Collector()
         process(ruleNames, vocabulary, atn.states[0],
                 MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary))
-        return AutoCompletionContext(preceedingTokens, collector.collected())
+        return AutoCompletionContext(preceedingTokens, collector.collected(), editorContext.cachedAst())
     }
 
 }

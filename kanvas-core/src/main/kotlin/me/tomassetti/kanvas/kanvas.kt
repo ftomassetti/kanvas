@@ -24,6 +24,14 @@ private val BACKGROUND_DARKER = Color(23, 24, 20)
 private val BACKGROUND_LIGHTER = Color(109, 109, 109)
 
 class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(textArea) {
+    private var cachedRootField : Node?= null
+
+    var cachedRoot : Node?
+        get() = cachedRootField
+        set(value) {
+            cachedRootField = value
+        }
+
     val text : String
         get() = textArea.text
     var title : String
@@ -79,6 +87,9 @@ private fun <RootNode:Node> makeTextPanel(font: Font, languageSupport: LanguageS
 
         override fun parse(doc: RSyntaxDocument, style: String): ParseResult {
             val kolasuParseResult = languageSupport.parser.parse(doc.getText(0, doc.length))
+            if (kolasuParseResult.root != null) {
+                textPanel.cachedRoot = kolasuParseResult.root
+            }
             val issues = languageSupport.validator.validate(kolasuParseResult, context)
             val kanvasParseResult =  DefaultParseResult(this)
             issues.forEach { kanvasParseResult.addNotice(DefaultParserNotice(this, it.message, it.line, it.offset, it.length)) }
@@ -88,7 +99,7 @@ private fun <RootNode:Node> makeTextPanel(font: Font, languageSupport: LanguageS
         override fun isEnabled(): Boolean = true
     })
 
-    val provider = createCompletionProvider(languageSupport, context)
+    val provider = createCompletionProvider(languageSupport, context, textPanel)
     val ac = AutoCompletion(provider)
     ac.install(textArea)
 
@@ -148,7 +159,7 @@ private abstract class AbstractCompletionProviderBase : CompletionProviderBase()
     }
 }
 
-fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Context): CompletionProvider {
+fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Context, textPanel: TextPanel): CompletionProvider {
     if (languageSupport.parserData == null) {
         return object : AbstractCompletionProviderBase() {
 
@@ -192,7 +203,8 @@ fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Conte
         override fun getCompletionsImpl(comp: JTextComponent): MutableList<Completion>? {
             val retVal = ArrayList<Completion>()
             val code = beforeCaret(comp)
-            val autoCompletionContext = autoCompletionSuggester.suggestions(EditorContextImpl(code, languageSupport.antlrLexerFactory))
+            val autoCompletionContext = autoCompletionSuggester.suggestions(
+                    EditorContextImpl(code, languageSupport.antlrLexerFactory, textPanel))
             autoCompletionContext.proposals.forEach {
                 if (it.first.type != -1) {
                     retVal.addAll(languageSupport.propositionProvider.fromTokenType(this, autoCompletionContext.preecedingTokens, it.first.type, context))
