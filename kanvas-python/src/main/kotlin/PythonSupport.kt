@@ -1,6 +1,8 @@
 package me.tomassetti.kanvas
 
 import me.tomassetti.antlr.Python3
+import me.tomassetti.kolasu.model.Node
+import me.tomassetti.kolasu.parsing.Parser
 import org.antlr.v4.runtime.Lexer
 import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme
@@ -33,7 +35,9 @@ object pythonSyntaxScheme : SyntaxScheme(true) {
     }
 }
 
-object pythonLanguageSupport : BaseLanguageSupport() {
+object pythonLanguageSupport : BaseLanguageSupport<Node>() {
+    override val parser: Parser<Node>
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val syntaxScheme: SyntaxScheme
         get() = pythonSyntaxScheme
     override val antlrLexerFactory: AntlrLexerFactory
