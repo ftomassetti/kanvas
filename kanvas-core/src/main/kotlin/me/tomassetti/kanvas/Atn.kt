@@ -26,6 +26,8 @@ fun ATNState.describe(ruleNames: Array<String>? = null) : String = "[${this.stat
     else -> "UNKNOWN ${this.javaClass.simpleName}"
 }
 
+fun ATNState.isRuleStart() = this.stateType == ATNState.RULE_START
+
 fun Transition.describe(ruleNames: Array<String>, vocabulary: Vocabulary) : String = when(this) {
     is EpsilonTransition -> "(e)"
     is RuleTransition -> "rule ${ruleNames[this.ruleIndex]} precedence ${this.precedence}"
@@ -45,24 +47,25 @@ fun printAtn(atn: ATN, ruleNames: Array<String>, vocabulary: Vocabulary) {
     }
 }
 
-private fun String.toRuleName(parserClass: Class<*>) = this.removePrefix(parserClass.simpleName + "$").removeSuffix("Context")
+fun String.uncapitalize() = this.substring(0, 1).toLowerCase() + this.substring(1)
+private fun String.toRuleName(parserClass: Class<*>) = this.removePrefix(parserClass.simpleName + "$").removeSuffix("Context").uncapitalize()
 
 /**
  * Find the subrules: a map that list by the superrule the list of descending subrules, in order
  */
-fun subRules(parserClass: Class<*>): Map<String, MutableList<String>> {
+fun subRules(parserClass: Class<*>): Map<String, Set<String>> {
     val pool = ClassPool.getDefault()
     val rulesByLine = HashMap<String, Int>()
-    val subRules = HashMap<String, MutableList<String>>()
+    val subRules = HashMap<String, Set<String>>()
     parserClass.classes.forEach { nestedClass ->
         if (!nestedClass.superclass.name.equals(ParserRuleContext::class.java.canonicalName)
                 && !nestedClass.superclass.name.equals(Any::class.java.canonicalName)) {
             val superRule = nestedClass.superclass.simpleName.toRuleName(parserClass)
             val subRule = nestedClass.simpleName.toRuleName(parserClass)
             if (!subRules.containsKey(superRule)) {
-                subRules[superRule] = LinkedList<String>()
+                subRules[superRule] = HashSet<String>()
             }
-            subRules[superRule]!!.add(subRule)
+            (subRules[superRule]!! as MutableSet<String>).add(subRule)
         }
         try {
             val cc = pool.get(parserClass.canonicalName + "$${nestedClass.simpleName}")
@@ -71,10 +74,6 @@ fun subRules(parserClass: Class<*>): Map<String, MutableList<String>> {
         } catch (e: NotFoundException) {
             // skip
         }
-    }
-    subRules.forEach { superRule, subRules ->
-        Collections.sort(subRules, { a, b ->
-            rulesByLine[a]!! - rulesByLine[b]!! })
     }
     return subRules
 }

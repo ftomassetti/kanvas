@@ -130,6 +130,15 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary,
     }
 
     fun describe() = "[${states.map { it.describe(ruleNames) }.joinToString(separator = ", ")}]"
+
+    /**
+     * The rules in which I am at the moment
+     */
+    fun rulesStack() : List<String> {
+        val rules = LinkedList<String>()
+        states.filter { it.isRuleStart() }.forEach { rules.add(ruleNames[it.ruleIndex]) }
+        return rules
+    }
 }
 
 private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Boolean {
@@ -151,7 +160,7 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     parserStack: ParserStack,
                     alreadyPassed: Set<Int> = HashSet<Int>(),
                     history : List<String> = listOf("start"),
-                    debugging : Boolean = true) {
+                    debugging : Boolean = false) {
     if (debugging) {
         println("PROCESSING state=${state.describe(ruleNames)}")
         println("\tparserStack=${parserStack.describe()}")

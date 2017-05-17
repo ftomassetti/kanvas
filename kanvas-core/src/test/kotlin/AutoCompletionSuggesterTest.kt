@@ -30,7 +30,7 @@ class AutoCompletionSuggesterTest {
         val collected = process("")
         assertEquals(1, collected.size)
         assertEquals(StaMacLexer.SM, collected.first().first.type)
-        println(collected.first().second.describe())
+        assertEquals(listOf("stateMachine", "preamble"), collected.first().second.rulesStack())
     }
 
     @test fun afterSMToken() {
@@ -55,7 +55,7 @@ class AutoCompletionSuggesterTest {
                                    event""")
         assertEquals(1, collected.size)
         assertEquals(StaMacLexer.ID, collected.first().first.type)
-        println(collected.first().second.describe())
+        assertEquals(listOf("stateMachine", "preamble", "preambleElement"), collected.first().second.rulesStack())
     }
 
     @test fun afterInputToken() {
@@ -63,11 +63,17 @@ class AutoCompletionSuggesterTest {
                                    input""")
         assertEquals(1, collected.size)
         assertEquals(StaMacLexer.ID, collected.first().first.type)
-        println(collected.first().second.describe())
+        assertEquals(listOf("stateMachine", "preamble", "preambleElement"), collected.first().second.rulesStack())
     }
 
-    @test fun reflectionAnalysis() {
+    @test fun staMacSubRules() {
         val subrules = subRules(StaMacParser::class.java)
-        println(subrules)
+        assertEquals(mapOf(
+                "type" to setOf("string", "integer", "decimal"),
+                "preambleElement" to setOf("inputDecl", "eventDecl", "varDecl"),
+                "expression" to setOf("decimalLiteral", "minusExpression", "valueReference", "stringLiteral", "intLiteral", "parenExpression", "binaryOperation", "typeConversion"),
+                "statement" to setOf("printStatement", "exitStatement", "assignmentStatement"),
+                "stateBlock" to setOf("entryBlock", "transitionBlock", "exitBlock")
+        ), subrules)
     }
 }
