@@ -45,13 +45,15 @@ class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFacto
 }
 
 class AntlrAutoCompletionSuggester(val ruleNames: Array<String>,
-                                   val vocabulary: Vocabulary, val atn: ATN) : AutoCompletionSuggester {
+                                   val vocabulary: Vocabulary, val atn: ATN,
+                                   val debugging: Boolean = false) : AutoCompletionSuggester {
 
     override fun suggestions(editorContext: EditorContext): AutoCompletionContext {
         val preceedingTokens = editorContext.preceedingTokens()
         val collector = Collector()
         process(ruleNames, vocabulary, atn.states[0],
-                MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary))
+                MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary),
+                debugging = debugging)
         return AutoCompletionContext(preceedingTokens, collector.collected(), editorContext.cachedAst())
     }
 
@@ -147,6 +149,8 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary,
         states.filter { it.isRuleStart() }.forEach { rules.add(ruleNames[it.ruleIndex]) }
         return rules
     }
+
+    fun rulesWeAreIn() = states.filter { it.isRuleStart() }.map { it.ruleIndex }
 }
 
 private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Boolean {
@@ -159,6 +163,21 @@ private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Bo
         return state.transitions.any { isCompatibleWithStack(it.target, res.second) }
     } else {
         return true
+    }
+}
+
+private fun canGoThere(parserStack: ParserStack, currentState: ATNState, targetState: ATNState) : Boolean {
+    val currentRule = if (currentState is RuleStopState) {
+        val rulesWeAreIn = parserStack.rulesWeAreIn()
+        if (rulesWeAreIn.size < 2) throw IllegalStateException()
+        rulesWeAreIn.get(rulesWeAreIn.size - 2)
+    } else {
+        currentState.ruleIndex
+    }
+    if (targetState is RuleStartState) {
+        return true
+    } else {
+        return targetState.ruleIndex == currentRule
     }
 }
 
@@ -205,37 +224,43 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
         when {
             it.isEpsilon -> {
                 if (!alreadyPassed.contains(it.target.stateNumber)) {
-                    process(ruleNames, vocabulary, it.target, tokens, collector, stackRes.second,
-                            alreadyPassed.plus(it.target.stateNumber),
-                            history.plus(desc))
+                    if (canGoThere(parserStack, state, it.target)) {
+                        process(ruleNames, vocabulary, it.target, tokens, collector, stackRes.second,
+                                alreadyPassed.plus(it.target.stateNumber),
+                                history.plus(desc), debugging = debugging)
+                    }
                 }
             }
             it is AtomTransition -> {
                 val nextTokenType = tokens.next()
-                if (atCaret) {
-                    if (isCompatibleWithStack(it.target, parserStack)) {
-                        collector.collect(it.label, parserStack)
-                    } else if (debugging) {
-                        println("\tNOT COMPATIBLE")
-                    }
-                } else {
-                    if (nextTokenType.type == it.label) {
-                        process(ruleNames, vocabulary, it.target, tokens.move(), collector, stackRes.second, HashSet<Int>(), history.plus(desc))
+                if (canGoThere(parserStack, state, it.target)) {
+                    if (atCaret) {
+                        if (isCompatibleWithStack(it.target, parserStack)) {
+                            collector.collect(it.label, parserStack)
+                        } else if (debugging) {
+                            println("\tNOT COMPATIBLE")
+                        }
+                    } else {
+                        if (nextTokenType.type == it.label) {
+                            process(ruleNames, vocabulary, it.target, tokens.move(), collector, stackRes.second, HashSet<Int>(), history.plus(desc), debugging = debugging)
+                        }
                     }
                 }
             }
             it is SetTransition -> {
                 val nextTokenType = tokens.next()
                 it.label().toList().forEach { sym ->
-                    if (atCaret) {
-                        if (isCompatibleWithStack(it.target, parserStack)) {
-                            collector.collect(sym, parserStack)
-                        } else if (debugging) {
-                            println("\tNOT COMPATIBLE")
-                        }
-                    } else {
-                        if (nextTokenType.type == sym) {
-                            process(ruleNames, vocabulary, it.target, tokens.move(), collector, stackRes.second, HashSet<Int>(), history.plus(desc))
+                    if (canGoThere(parserStack, state, it.target)) {
+                        if (atCaret) {
+                            if (isCompatibleWithStack(it.target, parserStack)) {
+                                collector.collect(sym, parserStack)
+                            } else if (debugging) {
+                                println("\tNOT COMPATIBLE")
+                            }
+                        } else {
+                            if (nextTokenType.type == sym) {
+                                process(ruleNames, vocabulary, it.target, tokens.move(), collector, stackRes.second, HashSet<Int>(), history.plus(desc), debugging = debugging)
+                            }
                         }
                     }
                 }

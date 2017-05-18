@@ -17,12 +17,13 @@ class AutoCompletionSuggesterTest {
     private val vocabulary = StaMacParser.VOCABULARY
     private val atn = StaMacParser._ATN
 
-    private fun process(code: String) : Set<Pair<TokenType, ParserStack>> {
+    private fun process(code: String, debugging : Boolean = false) : Set<Pair<TokenType, ParserStack>> {
         val lexer = antlrLexerFactory.create(code)
         val preceedingTokens = lexer.toList()
         val collector = Collector()
         process(ruleNames, vocabulary, atn.states[0],
-                MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary))
+                MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary),
+                debugging = debugging)
         return collector.collected()
     }
 
