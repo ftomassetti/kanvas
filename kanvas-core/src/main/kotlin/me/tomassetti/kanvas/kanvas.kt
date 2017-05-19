@@ -159,6 +159,9 @@ private abstract class AbstractCompletionProviderBase : CompletionProviderBase()
     }
 }
 
+fun LanguageSupport<*>.autoCompletionSuggester() = AutoCompletionContextProvider(this.parserData!!.ruleNames,
+        this.parserData!!.vocabulary, this.parserData!!.atn)
+
 fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Context, textPanel: TextPanel): CompletionProvider {
     if (languageSupport.parserData == null) {
         return object : AbstractCompletionProviderBase() {
@@ -170,9 +173,9 @@ fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Conte
         }
     }
     val cp = object : AbstractCompletionProviderBase() {
+        val me = this
 
-        private val autoCompletionSuggester = AntlrAutoCompletionSuggester(languageSupport.parserData!!.ruleNames,
-                languageSupport.parserData!!.vocabulary, languageSupport.parserData!!.atn)
+        private val autoCompletionSuggester = languageSupport.autoCompletionSuggester()
 
         private fun beforeCaret(comp: JTextComponent) : String {
             val doc = comp.document
@@ -203,15 +206,17 @@ fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Conte
         override fun getCompletionsImpl(comp: JTextComponent): MutableList<Completion>? {
             val retVal = ArrayList<Completion>()
             val code = beforeCaret(comp)
-            val autoCompletionContext = autoCompletionSuggester.suggestions(
+            val autoCompletionContext = autoCompletionSuggester.autoCompletionContext(
                     EditorContextImpl(code, languageSupport.antlrLexerFactory, textPanel))
             autoCompletionContext.proposals.forEach {
                 if (it.first.type != -1) {
-                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(this,
+                    retVal.addAll(languageSupport.propositionProvider.fromTokenType(
                             AutocompletionSurroundingInformation(
                                     textPanel.cachedRoot,
                                     autoCompletionContext.preecedingTokens,
-                                    it.second.rulesStack()), it.first.type, context))
+                                    it.second.rulesStack()), it.first.type, context).map {
+                        BasicCompletion(me, it)
+                    })
                 }
             }
 

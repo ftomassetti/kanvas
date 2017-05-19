@@ -27,7 +27,7 @@ data class AutoCompletionContext(val preecedingTokens: List<Token>,
  * The goal of this is to find the type of tokens that can be used in a given context
  */
 interface AutoCompletionSuggester {
-    fun suggestions(editorContext: EditorContext) : AutoCompletionContext
+    fun autoCompletionContext(editorContext: EditorContext) : AutoCompletionContext
 }
 
 data class TokenTypeImpl(override val type: Int) : TokenType {
@@ -44,11 +44,11 @@ class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFacto
     }
 }
 
-class AntlrAutoCompletionSuggester(val ruleNames: Array<String>,
-                                   val vocabulary: Vocabulary, val atn: ATN,
-                                   val debugging: Boolean = false) : AutoCompletionSuggester {
+class AutoCompletionContextProvider(val ruleNames: Array<String>,
+                                    val vocabulary: Vocabulary, val atn: ATN,
+                                    val debugging: Boolean = false) : AutoCompletionSuggester {
 
-    override fun suggestions(editorContext: EditorContext): AutoCompletionContext {
+    override fun autoCompletionContext(editorContext: EditorContext): AutoCompletionContext {
         val preceedingTokens = editorContext.preceedingTokens()
         val collector = Collector()
         process(ruleNames, vocabulary, atn.states[0],

@@ -72,22 +72,20 @@ data class AutocompletionSurroundingInformation(val cachedAstRoot: Node?,
                                   val rulesStack: List<String>)
 
 interface PropositionProvider {
-    fun fromTokenType(completionProvider: CompletionProvider,
-                      autocompletionSurroundingInformation: AutocompletionSurroundingInformation,
-                      tokenType: Int, context: Context) : List<Completion>
+    fun fromTokenType(autocompletionSurroundingInformation: AutocompletionSurroundingInformation,
+                      tokenType: Int, context: Context) : List<String>
 }
 
 class DefaultLanguageSupport(val languageSupport: LanguageSupport<*>) : PropositionProvider {
-    override fun fromTokenType(completionProvider: CompletionProvider,
-                               autocompletionSurroundingInformation: AutocompletionSurroundingInformation,
-                               tokenType: Int, context: Context): List<Completion> {
-        val res = LinkedList<Completion>()
+    override fun fromTokenType(autocompletionSurroundingInformation: AutocompletionSurroundingInformation,
+                               tokenType: Int, context: Context): List<String> {
+        val res = LinkedList<String>()
         var proposition : String? = languageSupport.parserData!!.vocabulary.getLiteralName(tokenType)
         if (proposition != null) {
             if (proposition.startsWith("'") && proposition.endsWith("'")) {
                 proposition = proposition.substring(1, proposition.length - 1)
             }
-            res.add(BasicCompletion(completionProvider, proposition))
+            res.add(proposition)
         }
         return res
     }
