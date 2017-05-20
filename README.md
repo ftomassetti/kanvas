@@ -11,8 +11,8 @@ It is very simple to customize it to handle a language defined using ANTLR.
 ## Documentation
 
 This post explains the philosophy behind Kanvas:
-* [Kanvas: generating a simple IDE from your ANTLR grammar ](https://tomassetti.me/kanvas-generating-simple-ide-antlr-grammar/)
+* [Kanvas: generating a simple IDE from your ANTLR grammar ](https://tomassetti.thisACPB/kanvas-generating-simple-ide-antlr-grammar/)
 
 This post describe how syntax highlighting was implemented:
-* [post on syntax-highlight using an ANTLR lexer](https://tomassetti.me/how-to-create-an-editor-with-syntax-highlighting-dsl/)
+* [post on syntax-highlight using an ANTLR lexer](https://tomassetti.thisACPB/how-to-create-an-editor-with-syntax-highlighting-dsl/)
 

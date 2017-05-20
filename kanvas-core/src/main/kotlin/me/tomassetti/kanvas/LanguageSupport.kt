@@ -2,6 +2,7 @@ package me.tomassetti.kanvas
 
 import me.tomassetti.antlr.None
 import me.tomassetti.kolasu.model.Node
+import me.tomassetti.kolasu.model.Point
 import me.tomassetti.kolasu.parsing.Parser
 import me.tomassetti.kolasu.parsing.ParsingResult
 import org.antlr.v4.runtime.ANTLRInputStream
@@ -69,7 +70,8 @@ interface LanguageSupport<RootNode: Node> {
  */
 data class AutocompletionSurroundingInformation(val cachedAstRoot: Node?,
                                   val preecedingTokens: List<Token>,
-                                  val rulesStack: List<String>)
+                                  val rulesStack: List<String>,
+                                  val pointInCode: Point)
 
 interface PropositionProvider {
     fun fromTokenType(autocompletionSurroundingInformation: AutocompletionSurroundingInformation,

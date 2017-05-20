@@ -6,8 +6,8 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxDocument
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rsyntaxtextarea.parser.*
 import org.fife.ui.rtextarea.RTextScrollPane
-import java.awt.*
 import java.io.File
+import java.awt.*
 import java.net.URL
 import java.nio.charset.Charset
 import java.util.*
@@ -173,9 +173,19 @@ fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Conte
         }
     }
     val cp = object : AbstractCompletionProviderBase() {
-        val me = this
+        val thisACPB = this
 
         private val autoCompletionSuggester = languageSupport.autoCompletionSuggester()
+
+        private fun pointInCode(comp: JTextComponent) : me.tomassetti.kolasu.model.Point {
+            val doc = comp.document
+            val dot = comp.caretPosition
+            val root = doc.defaultRootElement
+            val currLineIndex = root.getElementIndex(dot)
+            val currentLine = root.getElement(currLineIndex)
+            val startLine = currentLine.startOffset
+            return me.tomassetti.kolasu.model.Point(currLineIndex, dot - startLine)
+        }
 
         private fun beforeCaret(comp: JTextComponent) : String {
             val doc = comp.document
@@ -214,8 +224,9 @@ fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Conte
                             AutocompletionSurroundingInformation(
                                     textPanel.cachedRoot,
                                     autoCompletionContext.preecedingTokens,
-                                    it.second.rulesStack()), it.first.type, context).map {
-                        BasicCompletion(me, it)
+                                    it.second.rulesStack(),
+                                    pointInCode(comp)), it.first.type, context).map {
+                        BasicCompletion(thisACPB, it)
                     })
                 }
             }
