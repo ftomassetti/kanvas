@@ -191,13 +191,13 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
     if (debugging) {
         println("PROCESSING state=${state.describe(ruleNames)}")
         println("\tparserStack=${parserStack.describe()}")
-        println("\talreadyPassed=${alreadyPassed}")
+        println("\talreadyPassed=$alreadyPassed")
         println("\thistory=${history.joinToString(", ")}")
     }
 
     val atCaret = tokens.atCaret()
     if (debugging) {
-        println("\tatCaret=${atCaret}")
+        println("\tatCaret=$atCaret")
         if (!atCaret) {
             println("\tnext token = ${tokens.next()}")
         }
@@ -218,9 +218,6 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
 
     state.transitions.forEach {
         val desc = describe(ruleNames, vocabulary, state, it)
-        //if (atCaret) {
-        //    println("Meeting caret: $desc \n\ttransition: ${it.me.tomassetti.kanvas.describe(ruleNames, vocabulary)}\n\tparserStack:${parserStack.me.tomassetti.kanvas.describe()}")
-        //}
         when {
             it.isEpsilon -> {
                 if (!alreadyPassed.contains(it.target.stateNumber)) {
@@ -283,4 +280,3 @@ fun Lexer.toList() : List<Token> {
     } while (next.type >= 0)
     return res
 }
-
