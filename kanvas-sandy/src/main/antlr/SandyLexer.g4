@@ -1,7 +1,7 @@
 lexer grammar SandyLexer;
 
-@lexer::members {
-    private static final int EXTRA = 1;
+channels {
+    EXTRA
 }
 
 // Whitespace
