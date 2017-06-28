@@ -95,6 +95,7 @@ fun <E> List<out E>.minusLast() : List<E> = this.subList(0, this.size - 1)
 class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary,
                   val states : List<ATNState> = emptyList()) {
 
+    // TODO Maybe PlusBlocks should be treated differently than StarBlocks
     fun process(state: ATNState) : Pair<Boolean, ParserStack> {
         return when (state) {
             is RuleStartState, is StarBlockStartState, is BasicBlockStartState,
@@ -158,6 +159,7 @@ private fun isCompatibleWithStack(state: ATNState, parserStack:ParserStack) : Bo
     //println("isCompatibleWithStack state=${state.me.tomassetti.kanvas.describe()} parserStack=${parserStack.me.tomassetti.kanvas.describe()}")
     val res = parserStack.process(state)
     if (!res.first) {
+        println("INCOMPATIBLE: state=${state.describe()} parserStack=${parserStack.describe()}")
         return false
     }
     if (state.epsilonOnlyTransitions) {
@@ -192,7 +194,7 @@ enum class Debugging {
 fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     state: ATNState, tokens: MyTokenStream, collector: Collector,
                     parserStack: ParserStack,
-                    alreadyPassed: Set<Int> = HashSet<Int>(),
+                    /*alreadyPassed: Set<Int> = HashSet<Int>(),*/
                     history : List<String> = listOf("start"),
                     debugging : Debugging = NONE) {
     val atCaret = tokens.atCaret()
@@ -200,7 +202,7 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
     if (debuggingOn) {
         println("PROCESSING state=${state.describe(ruleNames)}")
         println("\tparserStack=${parserStack.describe()}")
-        println("\talreadyPassed=$alreadyPassed")
+        //println("\talreadyPassed=$alreadyPassed")
         println("\thistory=${history.joinToString(", ")}")
     }
 
@@ -228,13 +230,13 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
         val desc = describe(ruleNames, vocabulary, state, it)
         when {
             it.isEpsilon -> {
-                if (!alreadyPassed.contains(it.target.stateNumber)) {
+                //if (!alreadyPassed.contains(it.target.stateNumber)) {
                     if (canGoThere(parserStack, state, it.target)) {
                         process(ruleNames, vocabulary, it.target, tokens, collector, stackRes.second,
-                                alreadyPassed.plus(it.target.stateNumber),
+                                //alreadyPassed.plus(it.target.stateNumber),
                                 history.plus(desc), debugging = debugging)
                     }
-                }
+                //}
             }
             it is AtomTransition -> {
                 val nextTokenType = tokens.next()
@@ -247,7 +249,8 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                         }
                     } else {
                         if (nextTokenType.type == it.label) {
-                            process(ruleNames, vocabulary, it.target, tokens.move(), collector, stackRes.second, HashSet<Int>(), history.plus(desc), debugging = debugging)
+                            process(ruleNames, vocabulary, it.target, tokens.move(), collector, stackRes.second,
+                                    /*HashSet<Int>(),*/ history.plus(desc), debugging = debugging)
                         }
                     }
                 }
@@ -264,7 +267,8 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                             }
                         } else {
                             if (nextTokenType.type == sym) {
-                                process(ruleNames, vocabulary, it.target, tokens.move(), collector, stackRes.second, HashSet<Int>(), history.plus(desc), debugging = debugging)
+                                process(ruleNames, vocabulary, it.target, tokens.move(), collector,
+                                        stackRes.second, /*HashSet<Int>(),*/ history.plus(desc), debugging = debugging)
                             }
                         }
                     }
