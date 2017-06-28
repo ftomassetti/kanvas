@@ -76,9 +76,17 @@ class CompletionTest {
                 tokenSuggested(code))
     }
 
-    @test fun annidatedParenthesis() {
+    @test fun incompleteAnnidatedParenthesis() {
         val code = "var a = ((1+1)"
         assertEquals(setOf(TokenTypeImpl(SandyLexer.RPAREN), TokenTypeImpl(SandyLexer.PLUS), TokenTypeImpl(SandyLexer.MINUS),
+                TokenTypeImpl(SandyLexer.DIVISION), TokenTypeImpl(SandyLexer.ASTERISK)),
+                tokenSuggested(code))
+    }
+
+    @test fun completeAnnidatedParenthesis() {
+        val code = "var a = ((1))"
+        assertEquals(setOf(TokenTypeImpl(SandyLexer.NEWLINE), TokenTypeImpl(SandyLexer.EOF),
+                TokenTypeImpl(SandyLexer.PLUS), TokenTypeImpl(SandyLexer.MINUS),
                 TokenTypeImpl(SandyLexer.DIVISION), TokenTypeImpl(SandyLexer.ASTERISK)),
                 tokenSuggested(code))
     }
