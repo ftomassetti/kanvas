@@ -52,4 +52,17 @@ class CompletionTest {
                 TokenTypeImpl(SandyLexer.INTLIT), TokenTypeImpl(SandyLexer.DECLIT)), tokenSuggested(code))
     }
 
+    @test fun incompleteParenthesis() {
+        val code = "var a = (1"
+        assertEquals(setOf(TokenTypeImpl(SandyLexer.RPAREN), TokenTypeImpl(SandyLexer.PLUS), TokenTypeImpl(SandyLexer.MINUS),
+                TokenTypeImpl(SandyLexer.DIVISION), TokenTypeImpl(SandyLexer.ASTERISK)),
+                tokenSuggested(code))
+    }
+
+    @test fun incompleteComplexParenthesis() {
+        val code = "var a = (1+1"
+        assertEquals(setOf(TokenTypeImpl(SandyLexer.RPAREN), TokenTypeImpl(SandyLexer.PLUS), TokenTypeImpl(SandyLexer.MINUS), TokenTypeImpl(SandyLexer.DIVISION), TokenTypeImpl(SandyLexer.ASTERISK)),
+                tokenSuggested(code))
+    }
+    
 }
