@@ -20,8 +20,11 @@ class MyEditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFac
 
 class CompletionTest {
 
-    fun tokenSuggested(code: String) = AutoCompletionContextProvider(SandyParser.ruleNames, SandyParser.VOCABULARY, SandyParser._ATN, debugging = false)
-            .autoCompletionContext(MyEditorContextImpl(code, sandyLanguageSupport.antlrLexerFactory)).proposals.map { it.first }.toSet()
+    fun tokenSuggested(code: String) = AutoCompletionContextProvider(
+            SandyParser.ruleNames, SandyParser.VOCABULARY, SandyParser._ATN, debugging = false)
+            .autoCompletionContext(MyEditorContextImpl(code, sandyLanguageSupport.antlrLexerFactory))
+            .proposals
+            .map { it.first }.toSet()
 
     @test fun emptyFile() {
         val code = ""
@@ -61,8 +64,9 @@ class CompletionTest {
 
     @test fun incompleteComplexParenthesis() {
         val code = "var a = (1+1"
-        assertEquals(setOf(TokenTypeImpl(SandyLexer.RPAREN), TokenTypeImpl(SandyLexer.PLUS), TokenTypeImpl(SandyLexer.MINUS), TokenTypeImpl(SandyLexer.DIVISION), TokenTypeImpl(SandyLexer.ASTERISK)),
+        assertEquals(setOf(TokenTypeImpl(SandyLexer.RPAREN), TokenTypeImpl(SandyLexer.PLUS), TokenTypeImpl(SandyLexer.MINUS),
+                TokenTypeImpl(SandyLexer.DIVISION), TokenTypeImpl(SandyLexer.ASTERISK)),
                 tokenSuggested(code))
     }
-    
+
 }
