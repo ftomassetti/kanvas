@@ -1,5 +1,6 @@
 package me.tomassetti.kanvas
 
+import me.tomassetti.kanvas.Debugging.*
 import me.tomassetti.kolasu.model.Node
 import org.antlr.v4.runtime.CommonToken
 import org.antlr.v4.runtime.Lexer
@@ -46,7 +47,7 @@ class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFacto
 
 class AutoCompletionContextProvider(val ruleNames: Array<String>,
                                     val vocabulary: Vocabulary, val atn: ATN,
-                                    val debugging: Boolean = false) : AutoCompletionSuggester {
+                                    val debugging: Debugging = NONE) : AutoCompletionSuggester {
 
     override fun autoCompletionContext(editorContext: EditorContext): AutoCompletionContext {
         val preceedingTokens = editorContext.preceedingTokens()
@@ -134,7 +135,7 @@ class ParserStack(val ruleNames: Array<String>, val vocabulary: Vocabulary,
                     return Pair(false, this)
                 }
             }
-            is BasicState,is StarLoopbackState, is PlusLoopbackState/*, is StarLoopEntryState*/ -> return Pair(true, this)
+            is BasicState, is StarLoopbackState, is PlusLoopbackState/*, is StarLoopEntryState*/ -> return Pair(true, this)
             else -> throw UnsupportedOperationException("Unsupported state: ${state.javaClass.canonicalName}")
         }
     }
@@ -181,22 +182,29 @@ private fun canGoThere(parserStack: ParserStack, currentState: ATNState, targetS
     }
 }
 
+enum class Debugging {
+    NONE,
+    AT_CARET,
+    ALL
+}
+
 // Visible for testing
 fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     state: ATNState, tokens: MyTokenStream, collector: Collector,
                     parserStack: ParserStack,
                     alreadyPassed: Set<Int> = HashSet<Int>(),
                     history : List<String> = listOf("start"),
-                    debugging : Boolean = false) {
-    if (debugging) {
+                    debugging : Debugging = NONE) {
+    val atCaret = tokens.atCaret()
+    val debuggingOn = debugging == ALL || (debugging == AT_CARET && atCaret)
+    if (debuggingOn) {
         println("PROCESSING state=${state.describe(ruleNames)}")
         println("\tparserStack=${parserStack.describe()}")
         println("\talreadyPassed=$alreadyPassed")
         println("\thistory=${history.joinToString(", ")}")
     }
 
-    val atCaret = tokens.atCaret()
-    if (debugging) {
+    if (debuggingOn) {
         println("\tatCaret=$atCaret")
         if (!atCaret) {
             println("\tnext token = ${tokens.next()}")
@@ -204,13 +212,13 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
     }
     val stackRes = parserStack.process(state)
     if (!stackRes.first) {
-        if (debugging) {
+        if (debuggingOn) {
             println("\tinvalid stack, returning")
         }
         return
     }
 
-    if (debugging) {
+    if (debuggingOn) {
         state.transitions.forEach {
             println("\t\ttransition: ${it.describe(ruleNames, vocabulary)}")
         }
@@ -234,7 +242,7 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                     if (atCaret) {
                         if (isCompatibleWithStack(it.target, parserStack)) {
                             collector.collect(it.label, parserStack)
-                        } else if (debugging) {
+                        } else if (debuggingOn) {
                             println("\tNOT COMPATIBLE")
                         }
                     } else {
@@ -251,7 +259,7 @@ fun process(ruleNames: Array<String>, vocabulary: Vocabulary,
                         if (atCaret) {
                             if (isCompatibleWithStack(it.target, parserStack)) {
                                 collector.collect(sym, parserStack)
-                            } else if (debugging) {
+                            } else if (debuggingOn) {
                                 println("\tNOT COMPATIBLE")
                             }
                         } else {
