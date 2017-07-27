@@ -37,7 +37,7 @@ class AutoCompletionSuggesterTest {
         val collected = process("")
         assertEquals(1, collected.size)
         assertEquals(StaMacLexer.SM, collected.first().first.type)
-        assertEquals(listOf("stateMachine", "preamble"), collected.first().second.names(ruleNames))
+        assertEquals(listOf("stateMachine"), collected.first().second.names(ruleNames))
     }
 
     @test fun afterSMToken() {

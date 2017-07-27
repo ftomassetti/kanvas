@@ -1,6 +1,8 @@
 package me.tomassetti.kanvas
 
 import me.tomassetti.antlr4c3.ParserStack
+import me.tomassetti.antlr4c3.api.TokenTypeImpl
+import me.tomassetti.antlr4c3.api.tokenSuggestedWithoutSemanticPredicatesWithContext
 import me.tomassetti.kanvas.Debugging.*
 import me.tomassetti.kolasu.model.Node
 import org.antlr.v4.runtime.CommonToken
@@ -51,11 +53,18 @@ typealias CompletionOptions = Set<CompletionOption>
 
 class AutoCompletionContextProvider(val ruleNames: Array<String>,
                                     val vocabulary: Vocabulary, val atn: ATN,
+                                    val languageName: String = "MyLanguage_${ruleNames[0]}",
                                     val debugging: Debugging = NONE) : AutoCompletionSuggester {
 
     override fun autoCompletionContext(editorContext: EditorContext): AutoCompletionContext {
         val preceedingTokens = editorContext.preceedingTokens()
-        val completionOptions = HashSet<CompletionOption>()
+        val completionOptionsRaw = tokenSuggestedWithoutSemanticPredicatesWithContext(
+                preceedingTokens.map { TokenTypeImpl(it.type) }, atn, vocabulary, ruleNames, languageName)
+
+        val completionOptions = completionOptionsRaw.tokens.keys.map { tokenKind ->
+            val parserStack = completionOptionsRaw.tokensContext[tokenKind]!!
+            Pair<TokenType, ParserStack>(me.tomassetti.kanvas.TokenTypeImpl(tokenKind), parserStack)
+        }.toSet()
 //        val collector = Collector()
 //        process(ruleNames, vocabulary, atn.states[0],
 //                MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary),
