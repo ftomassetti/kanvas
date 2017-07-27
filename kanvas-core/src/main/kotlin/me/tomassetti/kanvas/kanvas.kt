@@ -224,7 +224,7 @@ fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Conte
                             AutocompletionSurroundingInformation(
                                     textPanel.cachedRoot,
                                     autoCompletionContext.preecedingTokens,
-                                    it.second.rulesStack(),
+                                    it.second,
                                     pointInCode(comp)), it.first.type, context).map {
                         BasicCompletion(thisACPB, it)
                     })

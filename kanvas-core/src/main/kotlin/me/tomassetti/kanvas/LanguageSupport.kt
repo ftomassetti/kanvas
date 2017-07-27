@@ -70,7 +70,7 @@ interface LanguageSupport<RootNode: Node> {
  */
 data class AutocompletionSurroundingInformation(val cachedAstRoot: Node?,
                                   val preecedingTokens: List<Token>,
-                                  val rulesStack: List<String>,
+                                  val rulesStack: List<Int>,
                                   val pointInCode: Point)
 
 interface PropositionProvider {

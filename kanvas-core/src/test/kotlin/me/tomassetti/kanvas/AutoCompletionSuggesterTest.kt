@@ -2,10 +2,17 @@ package me.tomassetti.kanvas
 
 import me.tomassetti.antlr.StaMacLexer
 import me.tomassetti.antlr.StaMacParser
+import me.tomassetti.antlr4c3.ParserStack
 import org.antlr.v4.runtime.Lexer
 import kotlin.test.assertEquals
 import org.junit.Test as test
+import me.tomassetti.antlr4c3.api.*
+import me.tomassetti.antlr4c3.api.TokenTypeImpl
+import org.antlr.v4.runtime.atn.ATNState
 
+fun ParserStack.names(ruleNames: Array<String>) : List<String> {
+    return this.map { ruleNames[it] }
+}
 
 class AutoCompletionSuggesterTest {
 
@@ -18,20 +25,19 @@ class AutoCompletionSuggesterTest {
     private val atn = StaMacParser._ATN
 
     private fun process(code: String, debugging : Debugging = Debugging.NONE) : Set<Pair<TokenType, ParserStack>> {
-        val lexer = antlrLexerFactory.create(code)
-        val preceedingTokens = lexer.toList()
-        val collector = Collector()
-        process(ruleNames, vocabulary, atn.states[0],
-                MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary),
-                debugging = debugging)
-        return collector.collected()
+        val completionOptions = tokenSuggestedWithoutSemanticPredicatesWithContext(code, StaMacLexer::class.java, StaMacParser::class.java)
+
+        return completionOptions.tokens.keys.map { tokenKind ->
+            val parserStack = completionOptions.tokensContext[tokenKind]!!
+            Pair<TokenType, ParserStack>(me.tomassetti.kanvas.TokenTypeImpl(tokenKind), parserStack)
+        }.toSet()
     }
 
     @test fun emptyCode() {
         val collected = process("")
         assertEquals(1, collected.size)
         assertEquals(StaMacLexer.SM, collected.first().first.type)
-        assertEquals(listOf("stateMachine", "preamble"), collected.first().second.rulesStack())
+        assertEquals(listOf("stateMachine", "preamble"), collected.first().second.names(ruleNames))
     }
 
     @test fun afterSMToken() {
@@ -56,7 +62,7 @@ class AutoCompletionSuggesterTest {
                                    event""")
         assertEquals(1, collected.size)
         assertEquals(StaMacLexer.ID, collected.first().first.type)
-        assertEquals(listOf("stateMachine", "preamble", "preambleElement"), collected.first().second.rulesStack())
+        assertEquals(listOf("stateMachine", "preamble", "preambleElement"), collected.first().second.names(ruleNames))
     }
 
     @test fun afterInputToken() {
@@ -64,7 +70,7 @@ class AutoCompletionSuggesterTest {
                                    input""")
         assertEquals(1, collected.size)
         assertEquals(StaMacLexer.ID, collected.first().first.type)
-        assertEquals(listOf("stateMachine", "preamble", "preambleElement"), collected.first().second.rulesStack())
+        assertEquals(listOf("stateMachine", "preamble", "preambleElement"), collected.first().second.names(ruleNames))
     }
 
     @test fun staMacSubRules() {
