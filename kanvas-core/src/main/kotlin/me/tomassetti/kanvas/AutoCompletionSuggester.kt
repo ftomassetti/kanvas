@@ -1,8 +1,7 @@
 package me.tomassetti.kanvas
 
 import me.tomassetti.antlr4c3.ParserStack
-import me.tomassetti.antlr4c3.api.TokenTypeImpl
-import me.tomassetti.antlr4c3.api.tokenSuggestedWithoutSemanticPredicatesWithContext
+import me.tomassetti.antlr4c3.api.completionsWithContextIgnoringSemanticPredicates
 import me.tomassetti.kanvas.Debugging.*
 import me.tomassetti.kolasu.model.Node
 import org.antlr.v4.runtime.CommonToken
@@ -34,8 +33,7 @@ interface AutoCompletionSuggester {
     fun autoCompletionContext(editorContext: EditorContext) : AutoCompletionContext
 }
 
-data class TokenTypeImpl(override val type: Int) : TokenType {
-}
+data class TokenTypeImpl(override val type: Int) : TokenType
 
 class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFactory, val textPanel: TextPanel) : EditorContext {
     override fun cachedAst(): Node? {
@@ -58,17 +56,13 @@ class AutoCompletionContextProvider(val ruleNames: Array<String>,
 
     override fun autoCompletionContext(editorContext: EditorContext): AutoCompletionContext {
         val preceedingTokens = editorContext.preceedingTokens()
-        val completionOptionsRaw = tokenSuggestedWithoutSemanticPredicatesWithContext(
-                preceedingTokens.map { TokenTypeImpl(it.type) }, atn, vocabulary, ruleNames, languageName)
+        val completionOptionsRaw = completionsWithContextIgnoringSemanticPredicates(
+                preceedingTokens.map { it.type }, atn, vocabulary, ruleNames, languageName)
 
         val completionOptions = completionOptionsRaw.tokens.keys.map { tokenKind ->
             val parserStack = completionOptionsRaw.tokensContext[tokenKind]!!
             Pair<TokenType, ParserStack>(me.tomassetti.kanvas.TokenTypeImpl(tokenKind), parserStack)
         }.toSet()
-//        val collector = Collector()
-//        process(ruleNames, vocabulary, atn.states[0],
-//                MyTokenStream(preceedingTokens), collector, ParserStack(ruleNames, vocabulary),
-//                debugging = debugging)
         return AutoCompletionContext(preceedingTokens, completionOptions, editorContext.cachedAst())
     }
 
