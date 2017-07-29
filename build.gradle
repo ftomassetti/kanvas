@@ -15,7 +15,7 @@ buildscript {
     }
 }
 
-def kanvasVersion = '0.2.1'
+def kanvasVersion = '0.2.2-SNAPSHOT'
 
 task version << {
     print "Version ${kanvasVersion}"
