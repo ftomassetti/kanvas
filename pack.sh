@@ -7,9 +7,6 @@ echo
 echo CORE
 echo
 
-mv kanvas-core/build/libs/kanvas-core.jar kanvas-core/build/libs/kanvas-core-${VERSION}.jar
-mv kanvas-core/build/libs/kanvas-core-javadoc.jar kanvas-core/build/libs/kanvas-core-${VERSION}-javadoc.jar
-mv kanvas-core/build/libs/kanvas-core-sources.jar kanvas-core/build/libs/kanvas-core-${VERSION}-sources.jar
 sed s/unspecified/$VERSION/g kanvas-core/build/pom.xml > kanvas-core/build/pom_corrected.xml
 mv kanvas-core/build/pom_corrected.xml kanvas-core/build/pom.xml
 gpg $GPGPARAMS -ab kanvas-core/build/pom.xml
@@ -24,9 +21,6 @@ echo
 echo PYTHON
 echo
 
-mv kanvas-python/build/libs/kanvas-python.jar kanvas-python/build/libs/kanvas-python-${VERSION}.jar
-mv kanvas-python/build/libs/kanvas-python-javadoc.jar kanvas-python/build/libs/kanvas-python-${VERSION}-javadoc.jar
-mv kanvas-python/build/libs/kanvas-python-sources.jar kanvas-python/build/libs/kanvas-python-${VERSION}-sources.jar
 sed s/unspecified/$VERSION/g kanvas-python/build/pom.xml > kanvas-python/build/pom_corrected.xml
 mv kanvas-python/build/pom_corrected.xml kanvas-python/build/pom.xml
 gpg $GPGPARAMS -ab kanvas-python/build/pom.xml
@@ -41,9 +35,6 @@ echo
 echo SANDY
 echo
 
-mv kanvas-sandy/build/libs/kanvas-sandy.jar kanvas-sandy/build/libs/kanvas-sandy-${VERSION}.jar
-mv kanvas-sandy/build/libs/kanvas-sandy-javadoc.jar kanvas-sandy/build/libs/kanvas-sandy-${VERSION}-javadoc.jar
-mv kanvas-sandy/build/libs/kanvas-sandy-sources.jar kanvas-sandy/build/libs/kanvas-sandy-${VERSION}-sources.jar
 sed s/unspecified/$VERSION/g kanvas-sandy/build/pom.xml > kanvas-sandy/build/pom_corrected.xml
 mv kanvas-sandy/build/pom_corrected.xml kanvas-sandy/build/pom.xml
 gpg $GPGPARAMS -ab kanvas-sandy/build/pom.xml
