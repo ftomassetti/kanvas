@@ -1,6 +1,7 @@
 # kanvas
 
-[![Build Status](https://travis-ci.org/ftomassetti/kanvas.svg?branch=master)](https://travis-ci.org/ftomassetti/kanvas)
+[![Build Status](https://travis-ci.org/ftomassetti/kanvas.svg?branch=master)](https://travis-ci.org/ftomassetti/kanvas) [![Maven Central](https://img.shields.io/maven-central/v/me.tomassetti.kanvas/kanvas-core.svg)](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22me.tomassetti.kanvas%22%20AND%20a%3A%22kanvas-core%22)
+
 
 A very simple editor built in Kotlin and intended to be extended and hacked.
 
