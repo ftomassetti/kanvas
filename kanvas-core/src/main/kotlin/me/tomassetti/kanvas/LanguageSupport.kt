@@ -69,6 +69,7 @@ interface LanguageSupport<RootNode: Node> {
  * Information provided to contextualize autocompletion
  */
 data class AutocompletionSurroundingInformation(val cachedAstRoot: Node?,
+                                                val incompleteNode: Node?,
                                   val preecedingTokens: List<Token>,
                                   val rulesStack: List<Int>,
                                   val pointInCode: Point)

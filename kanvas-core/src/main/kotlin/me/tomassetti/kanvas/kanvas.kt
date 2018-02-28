@@ -231,6 +231,7 @@ fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Conte
                     retVal.addAll(languageSupport.propositionProvider.fromTokenType(
                             AutocompletionSurroundingInformation(
                                     textPanel.cachedRoot,
+                                    textPanel.incompleteNode,
                                     autoCompletionContext.preecedingTokens,
                                     it.second,
                                     pointInCode(comp)), it.first.type, context).map {
