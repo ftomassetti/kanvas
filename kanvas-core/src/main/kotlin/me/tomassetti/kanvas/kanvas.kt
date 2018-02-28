@@ -25,11 +25,18 @@ private val BACKGROUND_LIGHTER = Color(109, 109, 109)
 
 class TextPanel(textArea: RSyntaxTextArea, var file : File?) : RTextScrollPane(textArea) {
     private var cachedRootField : Node?= null
+    private var incompleteNodeField : Node?= null
 
     var cachedRoot : Node?
         get() = cachedRootField
         set(value) {
             cachedRootField = value
+        }
+
+    var incompleteNode : Node?
+        get() = incompleteNodeField
+        set(value) {
+            incompleteNodeField = value
         }
 
     val text : String
@@ -89,6 +96,7 @@ private fun <RootNode:Node> makeTextPanel(font: Font, languageSupport: LanguageS
             val kolasuParseResult = languageSupport.parser.parse(doc.getText(0, doc.length))
             if (kolasuParseResult.root != null) {
                 textPanel.cachedRoot = kolasuParseResult.root
+                textPanel.incompleteNode = kolasuParseResult.incompleteNode
             }
             val issues = languageSupport.validator.validate(kolasuParseResult, context)
             val kanvasParseResult =  DefaultParseResult(this)

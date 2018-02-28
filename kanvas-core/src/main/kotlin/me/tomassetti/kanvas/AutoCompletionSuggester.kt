@@ -20,11 +20,19 @@ interface TokenType {
 interface EditorContext {
     fun preceedingTokens() : List<Token>
     fun cachedAst() : Node?
+    fun incompleteNode() : Node?
 }
 
 data class AutoCompletionContext(val preecedingTokens: List<Token>,
                                  val proposals: Set<Pair<TokenType, ParserStack>>,
-                                 val cachedAst: Node?)
+                                 val cachedAst: Node?,
+                                 val incompleteNode: Node?) {
+    fun isIncomplete(node: Node?) : Boolean = if (incompleteNode == null || node == null) {
+        false
+    } else {
+        incompleteNode == node || isIncomplete(incompleteNode?.parent)
+    }
+}
 
 /**
  * The goal of this is to find the type of tokens that can be used in a given context
@@ -35,7 +43,13 @@ interface AutoCompletionSuggester {
 
 data class TokenTypeImpl(override val type: Int) : TokenType
 
-class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFactory, val textPanel: TextPanel) : EditorContext {
+class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFactory,
+                        val textPanel: TextPanel) : EditorContext {
+
+    override fun incompleteNode(): Node? {
+        return textPanel.incompleteNode
+    }
+
     override fun cachedAst(): Node? {
         return textPanel.cachedRoot
     }
@@ -44,6 +58,7 @@ class EditorContextImpl(val code: String, val antlrLexerFactory: AntlrLexerFacto
         val lexer = antlrLexerFactory.create(code)
         return lexer.toList()
     }
+
 }
 
 typealias CompletionOption = Pair<TokenType, ParserStack>
@@ -63,7 +78,7 @@ class AutoCompletionContextProvider(val ruleNames: Array<String>,
             val parserStack = completionOptionsRaw.tokensContext[tokenKind]!!
             Pair<TokenType, ParserStack>(me.tomassetti.kanvas.TokenTypeImpl(tokenKind), parserStack)
         }.toSet()
-        return AutoCompletionContext(preceedingTokens, completionOptions, editorContext.cachedAst())
+        return AutoCompletionContext(preceedingTokens, completionOptions, editorContext.cachedAst(), editorContext.incompleteNode())
     }
 
 }
