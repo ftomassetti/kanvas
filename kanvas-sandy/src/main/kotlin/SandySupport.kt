@@ -2,8 +2,8 @@ package me.tomassetti.kanvas
 
 import me.tomassetti.antlr.SandyLexer
 import me.tomassetti.antlr.SandyParser
-import me.tomassetti.kolasu.model.Node
-import me.tomassetti.kolasu.parsing.Parser
+import com.strumenta.kolasu.model.Node
+import com.strumenta.kolasu.parsing.Parser
 import org.antlr.v4.runtime.Lexer
 import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme

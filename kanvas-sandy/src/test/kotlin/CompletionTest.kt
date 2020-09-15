@@ -1,8 +1,8 @@
 
+import com.strumenta.kolasu.model.Node
 import me.tomassetti.antlr.SandyLexer
 import me.tomassetti.antlr.SandyParser
 import me.tomassetti.kanvas.*
-import me.tomassetti.kolasu.model.Node
 import org.antlr.v4.runtime.Token
 import kotlin.test.assertEquals
 import org.junit.Test as test

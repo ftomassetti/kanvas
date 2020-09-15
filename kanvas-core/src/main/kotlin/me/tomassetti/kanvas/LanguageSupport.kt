@@ -1,10 +1,10 @@
 package me.tomassetti.kanvas
 
+import com.strumenta.kolasu.model.Node
+import com.strumenta.kolasu.model.Point
+import com.strumenta.kolasu.parsing.Parser
+import com.strumenta.kolasu.parsing.ParsingResult
 import me.tomassetti.antlr.None
-import me.tomassetti.kolasu.model.Node
-import me.tomassetti.kolasu.model.Point
-import me.tomassetti.kolasu.parsing.Parser
-import me.tomassetti.kolasu.parsing.ParsingResult
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.Token

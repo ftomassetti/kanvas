@@ -1,6 +1,6 @@
 package me.tomassetti.kanvas
 
-import me.tomassetti.kolasu.model.Node
+import com.strumenta.kolasu.model.Node
 import org.fife.ui.autocomplete.*
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
@@ -177,14 +177,14 @@ fun createCompletionProvider(languageSupport: LanguageSupport<*>, context: Conte
 
         private val autoCompletionSuggester = languageSupport.autoCompletionSuggester()
 
-        private fun pointInCode(comp: JTextComponent) : me.tomassetti.kolasu.model.Point {
+        private fun pointInCode(comp: JTextComponent) : com.strumenta.kolasu.model.Point {
             val doc = comp.document
             val dot = comp.caretPosition
             val root = doc.defaultRootElement
             val currLineIndex = root.getElementIndex(dot)
             val currentLine = root.getElement(currLineIndex)
             val startLine = currentLine.startOffset
-            return me.tomassetti.kolasu.model.Point(currLineIndex, dot - startLine)
+            return com.strumenta.kolasu.model.Point(currLineIndex, dot - startLine)
         }
 
         private fun beforeCaret(comp: JTextComponent) : String {

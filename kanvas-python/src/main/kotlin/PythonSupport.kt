@@ -1,8 +1,8 @@
 package me.tomassetti.kanvas
 
+import com.strumenta.kolasu.model.Node
+import com.strumenta.kolasu.parsing.Parser
 import me.tomassetti.antlr.Python3
-import me.tomassetti.kolasu.model.Node
-import me.tomassetti.kolasu.parsing.Parser
 import org.antlr.v4.runtime.Lexer
 import org.fife.ui.rsyntaxtextarea.Style
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme

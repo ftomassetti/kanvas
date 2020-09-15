@@ -12,7 +12,7 @@ dependencies {
   compile 'com.fifesoft:rsyntaxtextarea:2.5.8'
   compile 'com.fifesoft:autocomplete:2.5.8'
   compile "com.github.strumenta:kolasu:$kolasu_version"
-  compile 'me.tomassetti.antlr4c3:antlr4-c3-kotlin:0.1.0'
+  implementation 'com.github.ftomassetti:antlr4-c3-kotlin:v0.2.0'
   compile group: 'org.javassist', name: 'javassist', version: '3.21.0-GA'
   testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
   testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
