@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.1.3'
+    ext.kotlin_version = '1.4.0'
 
     repositories {
         mavenCentral()
@@ -15,10 +15,15 @@ buildscript {
     }
 }
 
-def kanvasVersion = '0.2.2-SNAPSHOT'
+ext.antlr_version='4.8-1'
+ext.kolasu_version='v1.0.0'
 
-task version << {
-    print "Version ${kanvasVersion}"
+def kanvasVersion = '0.2.3'
+
+task version {
+    doLast {
+        print "Version ${kanvasVersion}"
+    }
 }
 
 allprojects {
@@ -28,9 +33,6 @@ allprojects {
     apply plugin: 'antlr'
     apply plugin: 'maven'
     apply plugin: 'idea'
-    //apply plugin: 'distribution'
-
-    //distTar.enabled = false
 
     group = 'me.tomassetti.kanvas'
     version = kanvasVersion    
@@ -69,39 +71,41 @@ subprojects {
         archives javadocJar, sourcesJar
     }
 
-    task generatePom << {
-        def generatedPom = pom {
-            project {
-                name project.name
-                description 'Kanvas is a framework to create flexible desktop editors'
-                version kanvasVersion
-                packaging 'jar'
-                url 'https://github.com/ftomassetti/kanvas'
+    task generatePom {
+        doLast {
+            def generatedPom = pom {
+                project {
+                    name project.name
+                    description 'Kanvas is a framework to create flexible desktop editors'
+                    version kanvasVersion
+                    packaging 'jar'
+                    url 'https://github.com/ftomassetti/kanvas'
 
-                scm {
-                    connection 'scm:git:https://github.com/ftomassetti/kanvas.git'
-                    developerConnection 'scm:git:git@github.com:ftomassetti/kanvas.git'
-                    url 'https://github.com/ftomassetti/kanvas.git'
-                }
-
-                licenses {
-                    license {
-                        name 'The MIT License (MIT)'
-                        url 'http://opensource.org/licenses/MIT'
-                        distribution 'repo'
+                    scm {
+                        connection 'scm:git:https://github.com/ftomassetti/kanvas.git'
+                        developerConnection 'scm:git:git@github.com:ftomassetti/kanvas.git'
+                        url 'https://github.com/ftomassetti/kanvas.git'
                     }
-                }
 
-                developers {
-                    developer {
-                        id = 'ftomassetti'
-                        name = 'Federico Tomassetti'
-                        email = 'federico@tomassetti.me'
+                    licenses {
+                        license {
+                            name 'The MIT License (MIT)'
+                            url 'http://opensource.org/licenses/MIT'
+                            distribution 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'ftomassetti'
+                            name = 'Federico Tomassetti'
+                            email = 'federico@tomassetti.me'
+                        }
                     }
                 }
             }
+            generatedPom.writeTo("$buildDir/pom.xml")
         }
-        generatedPom.writeTo("$buildDir/pom.xml")
     }
 }
 

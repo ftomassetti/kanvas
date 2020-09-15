@@ -1,6 +1,10 @@
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
 dependencies {
-  antlr "org.antlr:antlr4:4.5.1"
-  compile "org.antlr:antlr4-runtime:4.5.1"
+  antlr "org.antlr:antlr4:$antlr_version"
+  compile "org.antlr:antlr4-runtime:$antlr_version"
   compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
   compile 'com.fifesoft:rsyntaxtextarea:2.5.8'

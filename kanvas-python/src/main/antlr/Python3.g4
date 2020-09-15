@@ -35,10 +35,7 @@ lexer grammar Python3;
 
 tokens { INDENT, DEDENT }
 
-@lexer::members {
-    private static final int EXTRA = 1;
-}
-
+channels { EXTRA }
 
 /*
  * lexer rules
