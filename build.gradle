@@ -18,7 +18,7 @@ buildscript {
 ext.antlr_version='4.8-1'
 ext.kolasu_version='v1.0.0'
 
-def kanvasVersion = '0.2.3'
+def kanvasVersion = '0.2.4-SNAPSHOT'
 
 task version {
     doLast {
